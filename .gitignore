@@ -1,0 +1,4 @@
+*_input
+*.pyc
+.DS_Store
+.ipynb_checkpoints/
