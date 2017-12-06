@@ -21,13 +21,9 @@
 
 
 instructions = open('day10_input', 'r')
-commands = []
+commands = [x.strip() for x in instructions]
 bots = {}
 outputs = {}
-
-def commandlist():
-    for each in instructions:
-        commands.append(each.strip())
 
 # Brainstorming
 # For each command, I need to parse whether it's a input value or a bot output. How should I represent bots and output bins? Maybe a list, ('bot 92', 'low', 'high'). Will it work to parse out all the input values and then run all the bot outputs? Or do I have to run through the list (recursively?) checking for bots that have 2 values and activating them?
@@ -75,7 +71,6 @@ def botrun():
             b['v1'] = False
 
 # 500 runs turns out to be sufficient to reach steady state.
-commandlist()
 botlist()
 valrun()
 for i in range(500):

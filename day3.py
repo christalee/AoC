@@ -7,29 +7,21 @@
 # Problem: given a list of numbers, separate them into groups of 3 (down columns, not across rows). How many of these groups could be the sides of a triangle (a + b > c)?
 triangles = open('day3_input', 'r')
 count = 0
-htri = []
-vtri = []
 i = 0
 
 # Turn the input string into a list of numbers
-for each in triangles:
-    each = each.strip().split()
-    htri.append(each)
+htri = [x.split() for x in triangles]
 
 # Group those numbers into sets of 3
-while i < len(htri):
-    vtri.append(zip(htri[i], htri[i+1], htri[i+2]))
-    i += 3
+i = range(0, len(htri), 3)
+vtri = [y for x in i for y in zip(htri[x], htri[x+1], htri[x+2])]
 
 # Check each ordering of each group for valid triangle lengths
 for x in vtri:
-    for each in x:
-        a = int(each[0])
-        b = int(each[1])
-        c = int(each[2])
-        t = [a, b, c]
+    t = [int(each) for each in x]
+    a, b, c = t
 
-        if (a == max(t) and (b + c > a)) or (b == max(t) and (c + a > b)) or (c == max(t) and (a + b > c)):
-            count += 1
+    if (a == max(t) and (b + c > a)) or (b == max(t) and (c + a > b)) or (c == max(t) and (a + b > c)):
+        count += 1
     
 print count

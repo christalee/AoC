@@ -7,20 +7,16 @@
 # Problem: Given a list of strings, find the least common character in each column.
 
 messages = open('day6_input', 'r')
-hwords = []
 final = ''
 
-for each in messages:
-    hwords.append(each.strip())
+hwords = [y for x in messages for y in x.split()]
 
 # Reformat from rows to columns
 vwords = zip(*hwords)
 
 for word in vwords:
-    counts = []
     word = ''.join(word)
-    for l in word:
-        counts.append((l, word.count(l)))
+    counts = [(l, word.count(l)) for l in word]
     counts.sort(key=lambda l: l[1])
     final += counts[0][0]
 

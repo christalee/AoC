@@ -17,13 +17,11 @@ import string
 
 rooms = open('day4_input', 'r')
 
-r = []
 idsum = 0
 realnames = []
 
 # Start with each room name in a list of strings
-for each in rooms:
-    r.append(each.strip())
+r = [y for x in rooms for y in x.split()]
 
 for x in r:
     # Split each name into the [checksum], the sector ID, and the name, stripping out dashes
@@ -32,26 +30,33 @@ for x in r:
     rest = parts[0].rsplit('-', 1)
     sectorid = rest[1]
     name = rest[0].replace('-', '')
-    t = ''.join(sorted(set(name)))      # Alphabetize and deduplicate name into one string
+    
+    # Alphabetize and deduplicate name into one string
+    t = ''.join(sorted(set(name)))
     
     # Make a list of how often each letter appears in name
-    counts = []
-    for l in t:
-        counts.append((l, name.count(l)))
+    counts = [(l, name.count(l)) for l in t]
     counts.sort(key=lambda l: l[1], reverse=True)
-    letters = ''.join([x[0] for x in counts[:5]])   # Take the 5 most common letters to compare to the checksum
+    
+    # Take the 5 most common letters to compare to the checksum
+    letters = ''.join([x[0] for x in counts[:5]])
 
 # Part 2: Decrypt each room name by shifting each letter forward by the sector ID. Dashes become spaces. What is the sector ID of the room containing North Pole objects?
 
     if letters == checksum:
         ptext = []
-        a = string.ascii_lowercase                              # string constant holding the alphabet
+        # string constant holding the alphabet
+        a = string.ascii_lowercase
+        
         for each in rest[0]:
             if each.isalpha():
-                cindex = a.index(each)                          # find the current position of the letter
-                ptext.append(a[(cindex + int(sectorid)) % 26])  # shift each letter mod 26
+                # find the current position of the letter
+                cindex = a.index(each)
+                # shift each letter mod 26
+                ptext.append(a[(cindex + int(sectorid)) % 26])
             else:
-                ptext.append(' ')                               # convert dashes to spaces
+                # convert dashes to spaces
+                ptext.append(' ')
                 
         realname = ''.join(ptext)
         if 'north' in realname:

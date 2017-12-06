@@ -8,17 +8,14 @@
 
 # Part 2: What value does register a hold if register c is initialized to 1?
 
-# Directions:
-# cpy x y copies x (either an integer or the value of a register) into register y.
-# inc x increases the value of register x by one.
-# dec x decreases the value of register x by one.
-# jnz x y jumps to an instruction y away (positive means forward; negative means backward), but only if x is not zero.
+# Commands:
+# 'cpy x y' copies x (either an integer or the value of a register) into register y.
+# 'inc x' increases the value of register x by one.
+# 'dec x' decreases the value of register x by one.
+# 'jnz x y' jumps to an instruction y away (positive means forward; negative means backward), but only if x is not zero.
 
 instructions = open('day12_input', 'r')
-commands = []
-
-for each in instructions:
-    commands.append(each.strip())
+commands = [x.strip() for x in instructions]
         
 reg = {'a': 0, 'b': 0, 'c': 1, 'd': 0}
 i = 0

@@ -4,12 +4,15 @@
 # Advent of Code 2016, Day 8
 # http://adventofcode.com/2016/day/8
 
-# Part 1: You are given a set of directions to execute on a screen 50 px wide by 6 px tall, which starts entirely off. How many pixels turn on?
+# Part 1: You are given a set of commands to execute on a screen 50 px wide by 6 px tall, which starts entirely off. How many pixels turn on?
 
-# Directions: 
-# rect AxB turns on all of the pixels in a rectangle A px wide by B px tall at the top-left of the screen.
-# rotate row y=A by B shifts all of the pixels in row A (0 is the top row) right by B px. Pixels that would fall off the right end appear at the left end of the row.
-# rotate column x=A by B shifts all of the pixels in column A (0 is the left column) down by B px. Pixels that would fall off the bottom appear at the top of the column.
+# Commands: 
+
+# 'rect AxB' turns on all of the pixels in a rectangle A px wide by B px tall at the top-left of the screen.
+
+# 'rotate row y=A by B' shifts all of the pixels in row A (0 is the top row) right by B px. Pixels that would fall off the right end appear at the left end of the row.
+
+# 'rotate column x=A by B' shifts all of the pixels in column A (0 is the left column) down by B px. Pixels that would fall off the bottom appear at the top of the column.
 
 # numpy handles arrays well, let's use it here
 import numpy as np
@@ -31,10 +34,7 @@ def rotate(rowcol, index, shift):
         screen[:, i] = np.roll(screen[:, i], int(shift))
     
 instructions = open('day8_input', 'r')
-ops = []
-
-for each in instructions:
-    ops.append(each.strip())
+ops = [x.strip() for x in instructions]
 
 for each in ops:
     r = each.split()
@@ -43,11 +43,10 @@ for each in ops:
     if r[0] == "rotate":
         rotate(r[1], r[2], r[4])
 
+print np.sum(screen)
+
 # Part 2: The screen displays letters as capital letters 5 px wide. What code is displayed?
 
-x = 0
-
 # read straight off the terminal
-while x < screen.shape[1]:
+for x in range(0, screen.shape[1], 5):
     print screen[:, x:x+5]
-    x += 5
