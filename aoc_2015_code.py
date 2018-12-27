@@ -5,14 +5,15 @@
 # http://adventofcode.com/2015/
 
 import hashlib, re
+from typing import List, Dict, Optional, Union
 
 
-def day5_part2(strings=False):
+def day5_part2(strings: List[str] = None) -> int:
     if not strings:
         input = open('day5.txt', 'r')
         strings = [x.strip() for x in input]
 
-    results = []
+    results: List[bool] = []
 
     for s in strings:
         nice = False
@@ -24,12 +25,12 @@ def day5_part2(strings=False):
     return results.count(True)
 
 
-def day5_part1(strings=False):
+def day5_part1(strings: List[str] = None) -> int:
     if not strings:
         input = open('day5.txt', 'r')
         strings = [x.strip() for x in input]
 
-    results = []
+    results: List[bool] = []
 
     for s in strings:
         nice = False
@@ -43,27 +44,28 @@ def day5_part1(strings=False):
     return results.count(True)
 
 
-def day4(key='yzbqklnj'):
-    i = 1
-    found = False
+def day4(key: str = 'yzbqklnj') -> int:
+    i: int = 1
+    found: bool = False
 
     while not found:
         m = hashlib.md5()
         m.update(bytes(key + str(i), 'utf-8'))
-        if m.hexdigest()[:5] == '00000':
+        if m.hexdigest()[:6] == '000000':
             found = True
         i += 1
 
     return i - 1
 
 
-def day3(arrows=False):
+def day3(arrows: str = None) -> int:
     if not arrows:
         arrows = open('day3.txt', 'r').read()
 
-    santa = {'x': 0, 'y': 0}
-    robot = {'x': 0, 'y': 0}
-    presents = {str(list(santa.values())): 2}
+    # location: Dict[str, int] = {'x': 0, 'y': 0}
+    santa: Dict[str, int] = {'x': 0, 'y': 0}
+    robot: Dict[str, int] = {'x': 0, 'y': 0}
+    presents: Dict[str, int] = {'[0, 0]': 2}
 
     for i, a in enumerate(arrows):
         if i % 2 == 0:
@@ -88,13 +90,14 @@ def day3(arrows=False):
 
     return len(presents)
 
-def day2(box_list=False):
+
+def day2(box_list: Optional[List[str]] = None) -> Dict[str, int]:
     if not box_list:
         input = open('day2.txt', 'r')
         box_list = [x.strip() for x in input]
 
-    paper = 0
-    ribbon = 0
+    paper: int = 0
+    ribbon: int = 0
 
     for box in box_list:
         l, w, h = list(map(int, box.split('x')))
@@ -111,12 +114,12 @@ def day2(box_list=False):
     return {'paper': paper, 'ribbon': ribbon}
 
 
-def day1(parens=False):
+def day1(parens: Optional[str] = None) -> Dict[str, Union[int, List[int]]]:
     if not parens:
         parens = open('day1.txt', 'r').read()
 
-    floor = 0
-    basement = []
+    floor: int = 0
+    basement: List[int] = []
 
     for i, p in enumerate(parens):
         if p == '(':
