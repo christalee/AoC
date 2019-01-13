@@ -1,5 +1,37 @@
 from aoc_2015_code import *
 
+# def test_day8():
+#     assert day8('""\n"abc"\n"aaa\"aaa"\n"\x27"') == 12
+
+
+def test_day7():
+    assert day7(['123 -> x']) == {'x': 123}
+    assert day7(['123 -> x', '456 -> y']) == {'x': 123, 'y': 456}
+    assert day7(['123 -> x', '456 -> y', 'x AND y -> d']
+                ) == {'x': 123, 'y': 456, 'd': 72}
+    assert day7(['123 -> x', '456 -> y', 'x AND y -> d', 'x OR y -> e']
+                ) == {'x': 123, 'y': 456, 'd': 72, 'e': 507}
+    assert day7(['123 -> x', '456 -> y', 'x AND y -> d', 'x OR y -> e',
+                 'x LSHIFT 2 -> f']) == {'x': 123, 'y': 456, 'd': 72, 'e': 507, 'f': 492}
+    assert day7(['123 -> x', '456 -> y', 'x AND y -> d', 'x OR y -> e', 'x LSHIFT 2 -> f',
+                 'y RSHIFT 2 -> g']) == {'x': 123, 'y': 456, 'd': 72, 'e': 507, 'f': 492, 'g': 114}
+    assert day7(['123 -> x', '456 -> y', 'x AND y -> d', 'x OR y -> e', 'x LSHIFT 2 -> f', 'y RSHIFT 2 -> g',
+                 'NOT x -> h']) == {'x': 123, 'y': 456, 'd': 72, 'e': 507, 'f': 492, 'g': 114, 'h': 65412}
+    assert day7(['123 -> x', '456 -> y', 'x AND y -> d', 'x OR y -> e', 'x LSHIFT 2 -> f', 'y RSHIFT 2 -> g',
+                 'NOT x -> h', 'NOT y -> i']) == {'x': 123, 'y': 456, 'd': 72, 'e': 507, 'f': 492, 'g': 114, 'h': 65412, 'i': 65079}
+
+
+def test_day6():
+    assert day6_part1(['turn on 0,0 through 999,999']) == 1000000
+    assert day6_part1(['toggle 0,0 through 999,0']) == 1000
+    assert day6_part1(['turn off 499,499 through 500,500']) == 0
+    assert day6_part1(['turn on 499,499 through 500,500']) == 4
+    assert day6_part1(['turn on 0,499 through 999,500',
+                       'toggle 499,499 through 500,500']) == 1996
+
+    assert day6_part2(['turn on 0,0 through 0,0']) == 1
+    assert day6_part2(['toggle 0,0 through 999,999']) == 2000000
+
 
 def test_day5():
     assert day5_part1(['ugknbfddgicrmopn']) == 1
