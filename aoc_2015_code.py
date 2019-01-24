@@ -5,10 +5,12 @@
 # http://adventofcode.com/2015/
 
 import hashlib
+import itertools
 import re
 from typing import Dict, List, Optional, Union
 
 import numpy as np
+import pandas as pd
 
 
 def input(filename):
@@ -18,36 +20,100 @@ def input(filename):
     return data
 
 
+# Is there any way to speed this up?
+def day10(i, digits='1113122113'):
+    while i > 0:
+        print(i)
+        numerals = []
+        while len(digits) > 0:
+            m = re.match(r'(\d)\1*', digits)
+            numerals.append(m.group())
+            digits = digits[m.end():]
+
+        for n in numerals:
+            c = len(n)
+            digits += str(c) + n[0]
+        i -= 1
+    return digits
+
+
 def day9(distances=None):
     if not distances:
         distances = input('day9.txt')
 
-    legs = {}
+    parsed = []
     for d in distances:
-        x = d.split(' = ')
-        legs[x[1]] = x[0]
-    km = list(legs.keys()).sort()
+        s = d.split()
+        s.remove('to')
+        s.remove('=')
+        parsed.append(s)
 
-# def day8(strings=None):
-#     if not strings:
-#         with open('day8.txt', 'r') as input:
-#             strings = input.read()
-#
-#     string_len = 0
-#     byte_len = len(strings)
-#     string_list = [x.strip() for x in strings]
-#
-#     for s in string_list:
-#         t = s[1:-1]
-#         if r'\\' in t:
-#             t = t.replace(r'\\', '_')
-#         if r'\"' in t:
-#             t = t.replace(r'\"', '_')
-#         if r'\x' in t:
-#             t = re.sub(r'(\\x[a-fA-F0-9]{2})', '_', t)
-#         string_len += len(t)
-#
-#     return byte_len - string_len
+    stops = []
+    for d in parsed:
+        if d[0] not in stops:
+            stops.append(d[0])
+        if d[1] not in stops:
+            stops.append(d[1])
+
+    # this is probably unnecessary
+    legs = pd.DataFrame(columns=stops, index=stops)
+    for d in parsed:
+        legs.loc[d[0], d[1]] = d[2]
+        legs.loc[d[1], d[0]] = d[2]
+
+    # This calculates each journey twice, backwards and forwards
+    # also that for/enumerate/if loop is clumsy - fix it
+    # maybe lookup distances directly in parsed[] instead of legs[DF]?
+    journeys = {}
+    itineraries = itertools.permutations(stops)
+    for i in itineraries:
+        d = 0
+        for n, s in enumerate(i):
+            if n + 1 < len(i):
+                d += int(legs.loc[s, i[n + 1]])
+        journeys[i] = d
+
+    return (min(journeys.values()), max(journeys.values()))
+
+
+def day8_part2(strings=None):
+    if not strings:
+        with open('day8.txt', 'r') as input:
+            strings = input.read().split()
+
+    raw = sum(map(len, strings))
+    encoded = 0
+
+    for s in strings:
+        if '\"' in s:
+            s = s.replace('\"', '__')
+        if '\\' in s:
+            s = s.replace('\\', '__')
+        encoded += len(s) + 2
+
+    return encoded - raw
+
+
+# TODO change these all to re.sub / skip the if clauses
+def day8_part1(strings=None):
+    if not strings:
+        with open('day8.txt', 'r') as input:
+            strings = input.read().split()
+
+    raw = sum(map(len, strings))
+    decoded = 0
+
+    for s in strings:
+        t = s.strip('"')
+        if r'\x' in t:
+            t = re.sub(r'(\\x[a-fA-F0-9]{2})', '_', t)
+        if r'\"' in t:
+            t = t.replace(r'\"', '_')
+        if r'\\' in t:
+            t = t.replace(r'\\', '_')
+        decoded += len(t)
+
+    return raw - decoded
 
 
 def day7(instructions=None):
@@ -143,8 +209,8 @@ def day6_part1(instructions=None):
         if pieces[1] == 'off':
             lights[start[0]:end[0] + 1, start[1]:end[1] + 1] = 0
         if pieces[0] == 'toggle':
-            lights[start[0]:end[0] + 1, start[1]:end[1] +
-                   1] = np.bitwise_xor(lights[start[0]:end[0] + 1, start[1]:end[1] + 1], 1)
+            lights[start[0]:end[0] + 1, start[1]:end[1]
+                   + 1] = np.bitwise_xor(lights[start[0]:end[0] + 1, start[1]:end[1] + 1], 1)
 
     return np.sum(lights)
 

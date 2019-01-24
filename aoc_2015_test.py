@@ -1,7 +1,27 @@
 from aoc_2015_code import *
 
-# def test_day8():
-#     assert day8('""\n"abc"\n"aaa\"aaa"\n"\x27"') == 12
+
+def test_day10():
+    assert day10(1, '1') == '11'
+    assert day10(1, '11') == '21'
+    assert day10(1, '21') == '1211'
+    assert day10(1, '1211') == '111221'
+    assert day10(2, '1') == '21'
+    assert day10(5, '1') == '312211'
+
+
+def test_day9():
+    test = ['London to Dublin = 464',
+            'London to Belfast = 518',
+            'Dublin to Belfast = 141']
+    assert day9(test) == (605, 982)
+
+
+def test_day8():
+    with open('day8_test.txt', 'r') as input:
+        test = input.read().split()
+    assert day8_part1(test) == 12
+    assert day8_part2(test) == 19
 
 
 def test_day7():
@@ -58,11 +78,8 @@ def test_day3():
 
 
 def test_day2():
-    assert day2(['2x3x4'])['paper'] == 58
-    assert day2(['1x1x10'])['paper'] == 43
-
-    assert day2(['2x3x4'])['ribbon'] == 34
-    assert day2(['1x1x10'])['ribbon'] == 14
+    assert day2(['2x3x4']) == {'paper': 58, 'ribbon': 34}
+    assert day2(['1x1x10']) == {'paper': 43, 'ribbon': 14}
 
 
 def test_day1():
