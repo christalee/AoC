@@ -526,131 +526,94 @@ def river():
     return iterstate(state, paths, moves)
 
 
-def day10():
+def day10(commands=None):
     # Part 1: You have instructions for a system of numbered bots that take in numbers, compare them, and deposit them into output bins. Bots don't take any action until they have two numbers to compare. Which bot compares 61 to 17?
 
-    # Example:
-    # value 5 goes to bot 2
-    # bot 2 gives low to bot 1 and high to bot 0
-    # value 3 goes to bot 1
-    # bot 1 gives low to output 1 and high to bot 0
-    # bot 0 gives low to output 2 and high to output 0
-    # value 2 goes to bot 2
-
-    # Initially, bot 1 starts with a value-3 chip, and bot 2 starts with a value-2 chip and a value-5 chip.
-    # Because bot 2 has two microchips, it gives its lower one (2) to bot 1 and its higher one (5) to bot 0.
-    # Then, bot 1 has two microchips; it puts the value-2 chip in output 1 and gives the value-3 chip to bot 0.
-    # Finally, bot 0 has two microchips; it puts the 3 in output 2 and the 5 in output 0.
-
-    instructions = open('day10_input', 'r')
-    commands = [x.strip() for x in instructions]
-    bots = {}
-    outputs = {}
+    if not commands:
+        commands = input('day10.txt')
 
     # Brainstorming
-    # For each command, I need to parse whether it's a input value or a bot output. How should I represent bots and output bins? Maybe a list, ('bot 92', 'low', 'high'). Will it work to parse out all the input values and then run all the bot outputs? Or do I have to run through the list (recursively?) checking for bots that have 2 values and activating them?
-    # When I'm done, how will I know which bot I'm looking for? How will I know I'm done?
+    # For each command, I need to parse whether it's an input value or a bot output. How should I represent bots and output bins? Will it work to parse out all the input values and then run all the bot outputs? Or do I have to run through the list (recursively?) checking for bots that have 2 values and activating them?
 
-    # Refactor this all into multiple functions and then one main loop that calls them in succession?
-
-    def botlist():
+    def botnames():
         for c in commands:
+            # 'bot 0 gives low to output 2 and high to output 0' ->
             x = c.split()
 
-            # Define each bot as a dictionary with two values, initialized False, and destinations for its high and low values
+            # bots['bot0'] = {'low': False, 'high': False, 'lowdest': 'output2', 'highdest': 'output0'}}
             if x[0] == 'bot':
-                bots[(x[0] + x[1])] = {'v0': False, 'v1': False, 'lowdest': x[5] + x[6], 'highdest': x[10] + x[11]}
-            # As you parse commands, also create dictionaries for each output bin
+                bots[(x[0] + x[1])] = {'low': False, 'high': False, 'lowdest': x[5] + x[6], 'highdest': x[10] + x[11]}
+
+            # bots['output2'] = {'value': False}
             if x[5] == 'output':
                 bots[(x[5] + x[6])] = {'value': False}
+
+            # bots['output0'] = {'value': False}
             if len(x) > 6 and x[10] == 'output':
                 bots[(x[10] + x[11])] = {'value': False}
 
-    # Next, populate each bot with its initial values
-    # Can this be merged with the previous function??
-    def valrun():
+    def botvals():
         for c in commands:
             x = c.split()
+
+            # populate each bot with its initial values
             if x[0] == 'value':
-                bcompare(bots[(x[4] + x[5])], int(x[1]))
+                deposit(bots[(x[4] + x[5])], int(x[1]))
 
     # Given a bot or bin, deposit the number in one of the bot's slots or the bin.
-    def bcompare(bot, x):
-        if 'value' in bot.keys():
+    def deposit(bot, x):
+        if 'value' in bot:
             bot['value'] = x
-        elif bot['v0']:
-            bot['v1'] = x
-        else:
-            bot['v0'] = x
+        if 'low' in bot:
+            if not bot['low']:
+                bot['low'] = x
+            elif x > bot['low']:
+                bot['high'] = x
+            elif x < bot['low']:
+                bot['high'] = bot['low']
+                bot['low'] = x
 
-    # If a bot has both values, compare & send them to lowdest and highdest and reset them to False
+    # If a bot has both values, compare & send them to lowdest and highdest and reset them to False (?)
     def botrun():
-        for k, b in bots.iteritems():
-            if ('v0' in b.keys()) and b['v0'] and b['v1']:
-                bcompare(bots[b['lowdest']], min(b['v0'], b['v1']))
-                bcompare(bots[b['highdest']], max(b['v0'], b['v1']))
-                b['v0'] = False
-                b['v1'] = False
+        for b in bots.values():
+            if ('low' in b) and b['low'] and b['high']:
+                deposit(bots[b['lowdest']], b['low'])
+                deposit(bots[b['highdest']], b['high'])
+                b['low'] = False
+                b['high'] = False
 
-    # 500 runs turns out to be sufficient to reach steady state.
-    botlist()
-    valrun()
-    for i in range(500):
+    # 250 runs turns out to be sufficient to reach steady state.
+    bots = {}
+    botnames()
+    for i in range(250):
+        botvals()
         botrun()
+
+    bots_final = [x for x in iter(bots) if x.startswith('bot')]
+    for x in bots_final:
+        p1 = 0
+        if bots[x]['low'] == 17 and bots[x]['high'] == 61:
+            p1 = int(x.strip('bot'))
+            break
 
     # Part 2: What is the product of the numbers in bins 0, 1, and 2?
 
-    r = bots['output0']['value'] * bots['output1']['value'] * bots['output2']['value']
-    return r
+    p2 = bots['output0']['value'] * bots['output1']['value'] * bots['output2']['value']
+
+    return {'part1': p1, 'part2': p2}
 
 
-def day9():
-
-    # Part 1: You need to decompress a data file. Compression markers are contained in parentheses. (10x2) means to take the next 10 characters and insert them 2 times, then continue reading forward. Ignore whitespace and do not include the marker itself in the decompressed text to insert. However, parentheses and other special characters may appear in inserted text without denoting a compression marker. What is the length of your decompressed file?
-
-    # Examples:
-    # ADVENT -> ADVENT with length 6.
-    # A(1x5)BC -> ABBBBBC with length 7.
-    # (3x3)XYZ -> XYZXYZXYZ with length 9.
-    # A(2x2)BCD(2x2)EFG -> ABCBCDEFEFG with length 11.
-    # (6x1)(1x3)A -> (1x3)A with length 6.
-    # X(8x2)(3x3)ABCY -> X(3x3)ABC(3x3)ABCY with length 18.
-
-    compressed = open('day9_input', 'r')
-    data = [x.strip() for x in compressed]
-    decompressed = 0
-
-    # Start at the beginning of the string. Find the first '('. Partition at the first ')'after that. Extract the rlen and rx from [0], and slice out s = [2][0:rlen]. Build up decompressed by adding rx*s. Recurse? on the string after the slice.
-
-    def expand(s, d):
-        if s.startswith('('):
-            if len(s) == 1:
-                return d
-            else:
-                x = s.partition(')')
-                marker = x[0].strip('(').split('x')
-                rlen = int(marker[0])
-                rx = int(marker[1])
-                repstr = x[2][0:rlen]
-                return expand(repstr * rx + x[2][rlen:], d)
-        else:
-            x = s.partition('(')
-            d += len(x[0])
-            return expand('(' + x[2], d)
-
-    # print expand(data[0], decompressed)
-
+def day9_part2(data=None):
     # Part 2: Turns out you need to expand markers within inserted text after all. What is the decompressed length of your file?
 
-    # Examples:
-    # (3x3)XYZ -> XYZXYZXYZ
-    # X(8x2)(3x3)ABCY -> X(3x3)ABC(3x3)ABCY -> XABCABCABCABCABCABCY
-    # (27x12)(20x12)(13x14)(7x10)(1x12)A -> A repeated 241920 times
-    # (25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN becomes 445 characters long.
+    if not data:
+        data = input('day9.txt')
 
-    # Switch from recursion to iteration. Can this be optimized??
+    # Switch from recursion to iteration.
+    # TODO Can this be optimized?? Am I storing the expanded string or just its length? Can I batch process this somehow? or parallelize?
+    # TODO timeit to confirm that this is RAM limited?
 
-    def expand2(s, d):
+    def expand(s, d):
         i = 0
         while len(s) > 1:
             if s.startswith('('):
@@ -669,12 +632,39 @@ def day9():
             if i % 100000 == 0:
                 print(d, len(s))
 
-        return d, i
+        return d
 
-    return expand2(data[0], decompressed)
+    return expand(data[0], 0)
 
 
-def day8():
+def day9_part1(data=None):
+    # Part 1: You need to decompress a data file. Compression markers are contained in parentheses. (10x2) means to take the next 10 characters and insert them 2 times, then continue reading forward. Ignore whitespace and do not include the marker itself in the decompressed text to insert. However, parentheses and other special characters may appear in inserted text without denoting a compression marker. What is the length of your decompressed file?
+
+    # Start at the beginning of the string. Find the first '('. Partition at the first ')'after that. Extract the rlen and rx from [0], and slice out s = [2][0:rlen]. Build up decompressed by adding rx*s. Recurse? on the string after the slice.
+
+    def expand(s, d):
+        if s.startswith('('):
+            if len(s) == 1:
+                return d
+            else:
+                x = s.partition(')')
+                marker = x[0].strip('(').split('x')
+                rlen = int(marker[0])
+                rx = int(marker[1])
+                repstr = x[2][0:rlen]
+                d += len(repstr * rx)
+                return expand(x[2][rlen:], d)
+        else:
+            x = s.partition('(')
+            d += len(x[0])
+            return expand('(' + x[2], d)
+
+    if not data:
+        data = input('day9.txt')
+    return expand(data[0], 0)
+
+
+def day8(ops=None):
 
     # Part 1: You are given a set of commands to execute on a screen 50 px wide by 6 px tall, which starts entirely off. How many pixels turn on?
 
@@ -703,9 +693,8 @@ def day8():
         if rowcol == "column":
             screen[:, i] = np.roll(screen[:, i], int(shift))
 
-    instructions = open('day8_input', 'r')
-    ops = [x.strip() for x in instructions]
-
+    if not ops:
+        ops = input('day8.txt')
     for each in ops:
         r = each.split()
         if r[0] == "rect":
@@ -722,62 +711,8 @@ def day8():
     return np.sum(screen)
 
 
-def day7_part1():
-
-    # Part 1: Strings are valid if they contain a 4 character palindrome (e.g. abba, smms), unless the palindrome is inside square brackets or the characters are all the same (e.g. nnnn). How many of the given strings are valid?
-
-    # Examples (make these tests?):
-    # abba[mnop]qrst is valid
-    # abcd[bddb]xyyx is invalid
-    # aaaa[qwer]tyui is invalid
-    # ioxxoj[asdfgh]zxcvbn is valid
-
-    addresses = open('day7_input', 'r')
-    count = 0
-
-    ips = [x.strip() for x in addresses]
-
-    # Given a string, test each set of 4 consecutive characters for palindromes
-    # Return True if any 4 are valid, otherwise False
-    def abba(s):
-        tf = [(s[i] == s[i + 1]) and (s[i - 1] == s[i + 2]) and (s[i] != s[i - 1]) for i in range(1, len(s) - 2)]
-        return True in tf
-
-    for i in ips:
-        outbs = []
-        inbs = []
-
-        # Split each string up by square brackets
-        x = i.split(']')
-        for y in x:
-            if '[' in y:
-                z = y.partition('[')
-                if abba(z[0]):
-                    outbs.append(True)
-                if abba(z[2]):
-                    inbs.append(True)
-            # Check the last segment too
-            elif abba(y):
-                outbs.append(True)
-
-        if True in outbs and True not in inbs:
-            count += 1
-
-    return count
-
-
-def day7_part2():
-    addresses = open('day7_input', 'r')
-    count = 0
-
-    ips = [x.strip() for x in addresses]
+def day7_part2(ips=None):
     # Part 2: Strings are valid if they contain a 3 character palindrome (e.g. aba, sms) outside square brackets AND the corresponding inverse (e.g. sms -> msm) inside square brackets.
-
-    # Examples:
-    # aba[bab]xyz is valid
-    # xyx[xyx]xyx is invalid
-    # aaa[rur]uru is valid
-    # zazbz[bzb]cdb is valid
 
     # Given a string, test each set of 3 consecutive characters for palindromes
     # Return a list for further testing
@@ -792,7 +727,8 @@ def day7_part2():
         return True in [True for x in a for y in b if x[::-1] == y]
 
     count = 0
-
+    if not ips:
+        ips = input('day7.txt')
     for i in ips:
         outbs = []
         inbs = []
@@ -816,39 +752,73 @@ def day7_part2():
     return count
 
 
-def day6():
+def day7_part1(ips=None):
+    # Part 1: Strings are valid if they contain a 4 character palindrome (e.g. abba, smms), unless the palindrome is inside square brackets or the characters are all the same (e.g. nnnn). How many of the given strings are valid?
 
-    # Problem: Given a list of strings, find the least common character in each column.
+    # Given a string, test each set of 4 consecutive characters for palindromes
+    # Return True if any 4 are valid, otherwise False
+    def abba(s):
+        tf = [(s[i] == s[i + 1]) and (s[i - 1] == s[i + 2]) and (s[i] != s[i - 1]) for i in range(1, len(s) - 2)]
+        return True in tf
 
-    messages = open('day6_input', 'r')
-    final = ''
+    count = 0
+    if not ips:
+        ips = input('day7.txt')
+    for i in ips:
+        outbs = []
+        inbs = []
 
+        # Split each string up by square brackets
+        x = i.split(']')
+        for y in x:
+            if '[' in y:
+                z = y.partition('[')
+                if abba(z[0]):
+                    outbs.append(True)
+                if abba(z[2]):
+                    inbs.append(True)
+            # Check the last segment too
+            elif abba(y):
+                outbs.append(True)
+
+        if True in outbs and True not in inbs:
+            count += 1
+
+    return count
+
+
+def day6(messages=None):
+
+    # Problem: Given a list of strings, find the most common character in each column.
+
+    if not messages:
+        messages = input('day6.txt')
     hwords = [y for x in messages for y in x.split()]
-
     # Reformat from rows to columns
     vwords = zip(*hwords)
 
+    final = {'part1': '', 'part2': ''}
     for word in vwords:
         word = ''.join(word)
         counts = [(l, word.count(l)) for l in word]
         counts.sort(key=lambda l: l[1])
-        final += counts[0][0]
+        final['part1'] += counts[-1][0]
+        final['part2'] += counts[0][0]
 
     return final
 
 
-def day5():
+def day5_part2(doorid='abbhdwsy'):
 
     # Problem: You are looking for an 8 character password. To find each character, determine the md5 hash of your input with an index that starts at 0 and increases each time. If the hexadecimal representation of the md5 result begins with 5 zeroes, the 7th digit is added to the password in the position given by the 6th digit. Only the first character found for each position is used, discard the rest.
 
-    doorid = 'abbhdwsy'
     i = 0
     password = ['_'] * 8
 
     # Run this loop until the password has changed from symbols to alphanumerics
     while not ''.join(password).isalnum():
         m = hashlib.md5()
-        m.update(doorid + str(i))
+        m.update((doorid + str(i)).encode())
         if m.hexdigest()[:5] == '00000' and m.hexdigest()[5].isdigit():
             position = int(m.hexdigest()[5])
             if position < 8 and password[position] == '_':
@@ -858,24 +828,35 @@ def day5():
     return ''.join(password)
 
 
-def day4():
+def day5_part1(doorid='abbhdwsy'):
+
+    # Problem: You are looking for an 8 character password. To find each character, determine the md5 hash of your input with an index that starts at 0 and increases each time. If the hexadecimal representation of the md5 result begins with 5 zeroes, the 6th digit is appended to the password.
+
+    i = 0
+    password = ''
+
+    # Run this loop until the password has changed from symbols to alphanumerics
+    while len(password) < 8:
+        m = hashlib.md5()
+        m.update((doorid + str(i)).encode())
+        if m.hexdigest()[:5] == '00000':
+            password += m.hexdigest()[5]
+        i += 1
+
+    return password
+
+
+def day4(rooms=None):
 
     # Part 1: You are given a list of rooms formatted as a name (lowercase letters separated by dashes) followed by a dash, a sector ID, and a checksum in square brackets. A room name is valid if the checksum is the five most common letters in the encrypted name, in order, with ties broken by alphabetization. What is the sum of the sector IDs for all the valid rooms?
 
-    # Examples (make these tests?):
-    # aaaaa-bbb-z-y-x-123[abxyz] is valid
-    # a-b-c-d-e-f-g-h-987[abcde] is valid
-    # not-a-real-room-404[oarel] is valid
-    # totally-real-room-200[decoy] is invalid
-
-    rooms = open('day4_input', 'r')
-
-    idsum = 0
-    realnames = []
-
+    if not rooms:
+        rooms = input('day4.txt')
     # Start with each room name in a list of strings
     r = [y for x in rooms for y in x.split()]
 
+    idsum = 0
+    p2 = 0
     for x in r:
         # Split each name into the [checksum], the sector ID, and the name, stripping out dashes
         parts = x.partition('[')
@@ -894,9 +875,9 @@ def day4():
         # Take the 5 most common letters to compare to the checksum
         letters = ''.join([x[0] for x in counts[:5]])
 
-    # Part 2: Decrypt each room name by shifting each letter forward by the sector ID. Dashes become spaces. What is the sector ID of the room containing North Pole objects?
-
         if letters == checksum:
+            idsum += int(sectorid)
+
             ptext = []
             # string constant holding the alphabet
             a = string.ascii_lowercase
@@ -913,15 +894,30 @@ def day4():
 
             realname = ''.join(ptext)
             if 'north' in realname:
-                print(realname, sectorid)
-    return True
+                p2 = int(sectorid)
+            else:
+                pass
+
+    return {'part1': idsum, 'part2': p2}
 
 
-def day3_part2(triangles=None):
+def day3(triangles=None):
 
-    # Problem: given a list of numbers, separate them into groups of 3 (down columns, not across rows). How many of these groups could be the sides of a triangle (a + b > c)?
+    # Problem: given a list of numbers, separate them into groups of 3. How many of these groups could be the sides of a triangle (a + b > c)?
     if not triangles:
         triangles = input('day3.txt')
+
+    # Check each ordering of each group for valid triangle lengths
+    p1 = 0
+    for x in triangles:
+        t = list(map(int, x.split()))
+        c = max(t)
+        t.remove(c)
+        a, b = t
+        if a + b > c:
+            p1 += 1
+
+    # Part 2: Separate the numbers into groups of 3 down columns, not across rows, then check for triangles
 
     # Group those numbers into sets of 3
     t = [x.split() for x in triangles]
@@ -929,40 +925,23 @@ def day3_part2(triangles=None):
     vtri = [y for x in i for y in zip(t[x], t[x + 1], t[x + 2])]
 
     # Check each ordering of each group for valid triangle lengths
-    count = 0
+    p2 = 0
     for x in vtri:
         t = list(map(int, x))
-        a, b, c = t
+        c = max(t)
+        t.remove(c)
+        a, b = t
+        if a + b > c:
+            p2 += 1
 
-        if (a == max(t) and (b + c > a)) or (b == max(t) and (c + a > b)) or (c == max(t) and (a + b > c)):
-            count += 1
-
-    return count
-
-
-def day3_part1(triangles=None):
-
-    # Problem: given a list of numbers, separate them into groups of 3. How many of these groups could be the sides of a triangle (a + b > c)?
-    if not triangles:
-        triangles = input('day3.txt')
-
-    # Check each ordering of each group for valid triangle lengths
-    count = 0
-    for x in triangles:
-        t = list(map(int, x.split()))
-        a, b, c = t
-
-        if (a == max(t) and (b + c > a)) or (b == max(t) and (c + a > b)) or (c == max(t) and (a + b > c)):
-            count += 1
-
-    return count
+    return {'part1': p1, 'part2': p2}
 
 
 def day2_part2(keys=None):
 
     # Problem: Starting from the 5 of a 13-digit keypad, follow the given directions (Up, Down, Left, Right) to find each digit of a passcode. Skip any direction that leads off the edge of the keypad.
 
-    # Keypad layout
+    # Keypad
     #        1
     #    2   3   4
     # 5  6   7   8   9
@@ -1013,7 +992,7 @@ def day2_part1(keys=None):
 
     # Problem: Starting from the 5 of a 9-digit keypad, follow the given directions (Up, Down, Left, Right) to find each digit of a passcode. Skip any direction that leads off the edge of the keypad.
 
-    # Keypad layout
+    # Keypad
     # 1 2 3
     # 4 5 6
     # 7 8 9
@@ -1064,6 +1043,7 @@ def day1(path=None):
     if not path:
         path = input('day1.txt')
     path = path[0].split(', ')
+
     # Start at the origin facing direction North = 0.
     # var coordinates holds a list of points visited.
     facing = 0
