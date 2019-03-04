@@ -8,19 +8,47 @@
 import copy
 import hashlib
 import pprint
+import re
 import string
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 
 
-def input(filename):
+def input(filename: str):
     with open(filename, 'r') as input:
         data = [x.strip() for x in input]
 
     return data
 
 
-def day18():
+def day20(blocked=None):
+    if not blocked:
+        blocked = input('day20.txt')
+    blocked = [list(map(int, x.split('-'))) for x in blocked]
+    blocked.sort()
+
+    lowest = blocked[0][1] + 1
+    allowed = []
+    for x, y in blocked:
+        if x > lowest:
+            allowed.extend(range(lowest, x))
+        if y > lowest:
+            lowest = y + 1
+
+    return {'part1': allowed[0], 'part2': len(allowed)}
+
+
+def day19(size=3001330):
+    elves = list(range(size))
+    while len(elves) > 1:
+        for i, e in enumerate(elves):
+            elves.pop((i + 1) % len(elves))
+
+    return elves[0] + 1
+
+
+def day18(size, row=None):
 
     # Problem: You face a room with 40 rows of tiles, some of which are safe (.) and some are traps (^). Given the layout of the first row, you can determine the layout of the next row by following the rules below.
 
@@ -33,53 +61,112 @@ def day18():
     # The wall (end of each row) counts as safe; any tile that is not a trap per these rules is safe.
 
     # Part 1: How many safe tiles are in this room?
-    pass
+    if not row:
+        row = input('day18.txt')
 
-
-def day17():
-    path = ''
-    seed = 'yjjvjgan'
-    location = (0, 0)
-
-    def doorcheck(x):
-        doors = []
-        for each in x:
-            if each in 'bcdef':
-                doors.append(True)
+    def traps(row):
+        newrow = ''
+        for x in range(len(row)):
+            c = row[x]
+            if x == 0:
+                l = '.'
             else:
-                doors.append(False)
-        return doors
+                l = row[x - 1]
 
-    while location is not (3, 3):
-        m = hashlib.md5()
-        m.update(seed + path)
-        doorcheck(m[0:4])
+            if x == len(row) - 1:
+                r = '.'
+            else:
+                r = row[x + 1]
+
+            if (l == c == '^' and r == '.') or (c == r == '^' and l == '.') or (l == c == '.' and r == '^') or (c == r == '.' and l == '^'):
+                newrow += '^'
+            else:
+                newrow += '.'
+
+        return newrow
+
+    maze = row
+    for x in range(size - 1):
+        maze.append(traps(maze[-1]))
+    count = 0
+    for r in maze:
+        count += r.count('.')
+
+    return count
 
 
-def day16():
+def day17(seed='yjjvjgan'):
+    path = ''
+    location = [0, 0]
+    pathlist = {path: location}
+
+    def pathfind(pathlist):
+        newpaths = {}
+        for (path, location) in pathlist.items():
+            if location == [3, 3]:
+                newpaths = path
+                break
+            else:
+                m = hashlib.md5()
+                m.update((seed + path).encode())
+                doors = [x in 'bcdef' for x in m.hexdigest().lower()[0:4]]
+                options = [d[0] for d in list(zip('UDLR', doors)) if d[1]]
+
+                for o in options:
+                    q = copy.deepcopy(location)
+                    if o == "U":
+                        if q[1] == 0:
+                            pass
+                        else:
+                            q[1] -= 1
+                    if o == "D":
+                        if q[1] == 3:
+                            pass
+                        else:
+                            q[1] += 1
+                    if o == "R":
+                        if q[0] == 3:
+                            pass
+                        else:
+                            q[0] += 1
+                    if o == "L":
+                        if q[0] == 0:
+                            pass
+                        else:
+                            q[0] -= 1
+
+                    p = path + o
+                    newpaths[p] = q
+
+        return newpaths
+
+    while not isinstance(pathlist, str):
+        pathlist = pathfind(pathlist)
+
+    return pathlist
+
+
+def day16(disk: int, seed: Optional[str] = None):
+
+    if not seed:
+        seed = '11100010111110100'
 
     # Problem: you need to generate random data to fill a disk and calculate its checksum. Given an initial seed value, you generate data this way:
-        #
-        # Call the data you have at this point "a".
-        # Make a copy of "a"; call this copy "b".
-        # Reverse the order of the characters in "b".
-        # In "b", replace all instances of 0 with 1 and all 1s with 0.
-        # The resulting data is "a", then a single 0, then "b".
 
-    disk = 35651584
-    seed = '11100010111110100'
-
-    binswap = {'0': '1', '1': '0'}
+    # Call the data you have at this point "a".
+    # Make a copy of "a"; call this copy "b".
+    # Reverse the order of the characters in "b".
+    # In "b", replace all instances of 0 with 1 and all 1s with 0.
+    # The resulting data is "a", then a single 0, then "b".
 
     def datagen(a):
         b = a[::-1]
-        b = b.translate(str.maketrans(binswap))
+        b = b.translate(str.maketrans('01', '10'))
         return a + '0' + b
 
     # Repeat until you have enough data to fill the disk; discard any extra data.
     while len(seed) < disk:
         seed = datagen(seed)
-
     seed = seed[0:disk]
 
     # Once you have enough, calculate the checksum this way:
@@ -97,78 +184,100 @@ def day16():
                 check += '1'
             else:
                 check += '0'
-        if len(check) % 2 == 0:
-            checksum(check)
+        if len(check) % 2 == 1:
+            return check
         else:
-            print(check, len(check))
+            return checksum(check)
 
     return checksum(seed)
 
 
 def day15():
 
-    # Problem: You have a machine of disks which rotate every second. You want to release a capsule at the top at the right time to pass through to the bottom. Each disk is 1s apart. Given the initial positions and number of positions on each disk, at what time should you release the capsule?
+    # Problem: You have a machine of disks which rotate every second. You want to release a capsule at the top at the right time to pass through to the bottom. Each disk is 1s apart and has a slot at position 0. Given the initial positions and number of positions on each disk, at what time should you release the capsule?
 
-    # Disc #1 has 13 positions; at time=0, it is at position 1.
-    # Disc #2 has 19 positions; at time=0, it is at position 10.
-    # Disc #3 has 3 positions; at time=0, it is at position 2.
-    # Disc #4 has 7 positions; at time=0, it is at position 1.
-    # Disc #5 has 5 positions; at time=0, it is at position 3.
-    # Disc #6 has 17 positions; at time=0, it is at position 5.
-    # Disc #7 has 11 positions; at time=0, it is at position 1.
+    d1 = {'init': 1, 'rank': 1, 'mod': 13}
+    d2 = {'init': 10, 'rank': 2, 'mod': 19}
+    d3 = {'init': 2, 'rank': 3, 'mod': 3}
+    d4 = {'init': 1, 'rank': 4, 'mod': 7}
+    d5 = {'init': 3, 'rank': 5, 'mod': 5}
+    d6 = {'init': 5, 'rank': 6, 'mod': 17}
+    d7 = {'init': 0, 'rank': 7, 'mod': 11}
 
-    # Track global time t. Code each disk's position mod the time. Update each position each reads 0 at the correct time.
+    p1 = [d1, d2, d3, d4, d5, d6]
+    p2 = p1 + [d7]
 
-    t = 0
+    # Track global time t. Code each disk's position mod the time. Update each position until every disk reads 0 at the same time.
 
-    def check(time):
+    def check(disks):
+        time = 0
         while True:
-            d1 = (1 + time + 1) % 13
-            d2 = (10 + time + 2) % 19
-            d3 = (2 + time + 3) % 3
-            d4 = (1 + time + 4) % 7
-            d5 = (3 + time + 5) % 5
-            d6 = (5 + time + 6) % 17
-            d7 = (0 + time + 7) % 11
-
-            if d1 == d2 == d3 == d4 == d5 == d6 == d7 == 0:
-                print(time)
-                break
-
-            if time % 10000 == 0:
-                print(time, d1, d2, d3, d4, d5, d6, d7)
+            total = 0
+            for d in disks:
+                total += (d['init'] + time + d['rank']) % d['mod']
+            if total == 0:
+                return time
 
             time += 1
 
-    return check(t)
+    return {'part1': check(p1), 'part2': check(p2)}
 
 
-def day14():
+def day14(salt='zpqevtbw'):
 
     # Problem: You are looking for 64 one-time pad keys. To find each key, determine the md5 hash of your input salt with an index that starts at 0 and increases each time. A key is valid if the lowercase hexadecimal representation of the md5 result contains 3 characters in a row AND a hash containing the same characters 5 times in a row occurs in the next 1000 hashes.
 
-    salt = 'zpqevtbw'
-    hashes = {}
-    keys = {}
-    h = '0123456789abcdef'
-
-    for x in range(500000):
+    def gen_hash(y):
         m = hashlib.md5()
-        m.update(salt + str(x))
-        hashes[x] = m.hexdigest().lower()
+        m.update(y.encode())
 
-    while len(keys) < 64:
-        for i in range(len(hashes) - 1000):
-            for j in range(i + 1, i + 1001):
-                for x in h:
-                    if x * 3 in hashes[i] and x * 5 in hashes[j]:
-                        keys[i] = [hashes[i], hashes[j], j]
-                        break
+        return m.hexdigest().lower()
 
-    return pprint.pprint(keys)
+    def stretch_hash(y):
+        for i in range(2017):
+            m = hashlib.md5()
+            m.update(y.encode())
+            y = m.hexdigest().lower()
+
+        return m.hexdigest().lower()
+
+    def find_keys(hashfn):
+        keys = {}
+        hashes = {}
+        quints = {k: {} for k in '0123456789abcdef'}
+        triples = {k: {} for k in '0123456789abcdef'}
+        index = 0
+
+        while len(keys) < 64:
+            for x in range(index, index + 5000):
+                y = salt + str(x)
+                hashes[x] = hashfn(y)
+
+            for n in hashes:
+                t = re.search(r'([a-f0-9])\1\1', hashes[n])
+                if t:
+                    triples[t.group()[0]][n] = hashes[n]
+
+                q = re.search(r'([a-f0-9])\1\1\1\1', hashes[n])
+                if q:
+                    quints[q.group()[0]][n] = hashes[n]
+
+            for k in quints:
+                qvals = quints[k]
+                tvals = triples[k]
+                for q in qvals:
+                    for t in tvals:
+                        if q in range(t + 1, t + 1001):
+                            keys[t] = tvals[t]
+
+            index += 5000
+
+        return sorted(list(keys.keys()))[63]
+
+    return {'part1': find_keys(gen_hash), 'part2': find_keys(stretch_hash)}
 
 
-def day13():
+def day13(goal=(39, 31), seed=1350):
 
     # Part 1: Given a map of a space defined by the function below, what is the shortest path from (1,1) to (31, 39)? You may not move diagonally.
 
@@ -179,55 +288,56 @@ def day13():
     # If the number of bits that are 1 is even, it's an open space.
     # If the number of bits that are 1 is odd, it's a wall.
 
-    # Example:
-    # puzzle input = 10, walls are #, spaces are .
+    def g(q):
+        def f(x, y):
+            v = bin(x * x + 3 * x + 2 * x * y + y + y * y + q)
+            return v.count('1') % 2
+        return f
 
-    #   0123456789
-    # 0 .#.####.##
-    # 1 ..#..#...#
-    # 2 #....##...
-    # 3 ###.#.###.
-    # 4 .##..#..#.
-    # 5 ..##....#.
-    # 6 #...##.###
+    # since numpy arrays are indexed as (row, column), goal must be given as (y, x)
+    position = (1, 1)
+    paths = [['start', position]]
+    h = g(seed)
+    maze = np.array([[h(x, y) for x in range(60)] for y in range(60)])
 
-    # shortest route from (1,1) to (7,4) is 11 steps (marked as O)
-    #   0123456789
-    # 0 .#.####.##
-    # 1 .O#..#...#
-    # 2 #OOO.##...
-    # 3 ###O#.###.
-    # 4 .##OO#OO#.
-    # 5 ..##OOO.#.
-    # 6 #...##.###
+    def pathfind(pathlist):
+        newpaths = []
+        for p in pathlist:
+            if p[-1] == goal:
+                newpaths = len(p) - 2
+                break
+            else:
+                newpaths.extend(nextstep(p))
 
-    steps = 0
-    origin = (1, 1)
-    destination = (31, 39)
-    q = 1350
+        return newpaths
 
-    # Generate the floor layout first, using handy numpy routines
-    def f(x, y):
-        s = x * x + 3 * x + 2 * x * y + y + y * y + q
-        pass
+    def nextstep(steps):
+        x, y = steps[-1]
+        around = [a for a in [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+                  if (maze[a] == 0 and a not in steps and -1 not in a)]
+        options = []
+        for n in around:
+            q = copy.deepcopy(steps)
+            q.append(n)
+            options.append(q)
 
-    layout = np.fromfunction(f, (40, 40), dtype=int)
-    for x in np.nditer(layout, op_flags=["readwrite"]):
-        b = bin(x)
-        if b.count('1') % 2 == 1:
-            x[...] = 1
-        else:
-            x[...] = 0
+        return options
 
-    # Pathfinding: Start at origin. While position is not destination, check for 0 (empty space), starting with whichever of (x, y) is farther from destination? or clockwise? If you can move, update position and steps, and add this path to dictionary? (cf. day11 code)
-    pass
+    # TODO refactor this to use a real while loop
+    while not isinstance(paths, int):
+        paths = pathfind(paths)
+
+    return paths
 
 
-def day12():
+def day12(commands=None):
 
     # Part 1: You are given a set of assembly instructions, operating on 4 registers initialized to 0. What value does register a hold when the instructions terminate?
 
     # Part 2: What value does register a hold if register c is initialized to 1?
+
+    p1 = {'a': 0, 'b': 0, 'c': 0, 'd': 0}
+    p2 = {'a': 0, 'b': 0, 'c': 1, 'd': 0}
 
     # Commands:
     # 'cpy x y' copies x (either an integer or the value of a register) into register y.
@@ -235,39 +345,41 @@ def day12():
     # 'dec x' decreases the value of register x by one.
     # 'jnz x y' jumps to an instruction y away (positive means forward; negative means backward), but only if x is not zero.
 
-    instructions = open('day12_input', 'r')
-    commands = [x.strip() for x in instructions]
-
-    reg = {'a': 0, 'b': 0, 'c': 1, 'd': 0}
-    i = 0
+    if not commands:
+        commands = input('day12.txt')
 
     # Instructions are followed in order from the beginning until no more remain; use i to track progress through the list
-    while i < len(commands):
-        c = commands[i].split(' ')
-        if c[0] == 'cpy':
-            if c[1] in reg.keys():
-                reg[c[2]] = reg[c[1]]
-            else:
-                reg[c[2]] = int(c[1])
-            i += 1
-        if c[0] == 'inc':
-            reg[c[1]] += 1
-            i += 1
-        if c[0] == 'dec':
-            reg[c[1]] -= 1
-            i += 1
-        if c[0] == 'jnz':
-            if c[1] in reg.keys():
-                if not reg[c[1]] == 0:
+    def assemble(reg):
+        i = 0
+
+        while i < len(commands):
+            c = commands[i].split(' ')
+            if c[0] == 'cpy':
+                if c[1] in reg.keys():
+                    reg[c[2]] = reg[c[1]]
+                else:
+                    reg[c[2]] = int(c[1])
+                i += 1
+            if c[0] == 'inc':
+                reg[c[1]] += 1
+                i += 1
+            if c[0] == 'dec':
+                reg[c[1]] -= 1
+                i += 1
+            if c[0] == 'jnz':
+                if c[1] in reg.keys():
+                    if not reg[c[1]] == 0:
+                        i += int(c[2])
+                    else:
+                        i += 1
+                elif not int(c[1]) == 0:
                     i += int(c[2])
                 else:
                     i += 1
-            elif not int(c[1]) == 0:
-                i += int(c[2])
-            else:
-                i += 1
 
-    return reg
+        return reg['a']
+
+    return {'part1': assemble(p1), 'part2': assemble(p2)}
 
 
 def day11():
@@ -527,12 +639,12 @@ def river():
 
 
 def day10(commands=None):
-    # Part 1: You have instructions for a system of numbered bots that take in numbers, compare them, and deposit them into output bins. Bots don't take any action until they have two numbers to compare. Which bot compares 61 to 17?
 
     if not commands:
         commands = input('day10.txt')
 
-    # Brainstorming
+    # Part 1: You have instructions for a system of numbered bots that take in numbers, compare them, and deposit them into output bins. Bots don't take any action until they have two numbers to compare. Which bot compares 61 to 17?
+
     # For each command, I need to parse whether it's an input value or a bot output. How should I represent bots and output bins? Will it work to parse out all the input values and then run all the bot outputs? Or do I have to run through the list (recursively?) checking for bots that have 2 values and activating them?
 
     def botnames():
@@ -606,9 +718,6 @@ def day10(commands=None):
 def day9_part2(data=None):
     # Part 2: Turns out you need to expand markers within inserted text after all. What is the decompressed length of your file?
 
-    if not data:
-        data = input('day9.txt')
-
     # Switch from recursion to iteration.
     # TODO Can this be optimized?? Am I storing the expanded string or just its length? Can I batch process this somehow? or parallelize?
     # TODO timeit to confirm that this is RAM limited?
@@ -634,6 +743,8 @@ def day9_part2(data=None):
 
         return d
 
+    if not data:
+        data = input('day9.txt')
     return expand(data[0], 0)
 
 
@@ -808,12 +919,12 @@ def day6(messages=None):
     return final
 
 
-def day5_part2(doorid='abbhdwsy'):
+def day5_part2(doorid: str = 'abbhdwsy') -> str:
 
     # Problem: You are looking for an 8 character password. To find each character, determine the md5 hash of your input with an index that starts at 0 and increases each time. If the hexadecimal representation of the md5 result begins with 5 zeroes, the 7th digit is added to the password in the position given by the 6th digit. Only the first character found for each position is used, discard the rest.
 
-    i = 0
-    password = ['_'] * 8
+    i: int = 0
+    password: List[str] = ['_'] * 8
 
     # Run this loop until the password has changed from symbols to alphanumerics
     while not ''.join(password).isalnum():
@@ -828,12 +939,12 @@ def day5_part2(doorid='abbhdwsy'):
     return ''.join(password)
 
 
-def day5_part1(doorid='abbhdwsy'):
+def day5_part1(doorid: str = 'abbhdwsy') -> str:
 
     # Problem: You are looking for an 8 character password. To find each character, determine the md5 hash of your input with an index that starts at 0 and increases each time. If the hexadecimal representation of the md5 result begins with 5 zeroes, the 6th digit is appended to the password.
 
-    i = 0
-    password = ''
+    i: int = 0
+    password: str = ''
 
     # Run this loop until the password has changed from symbols to alphanumerics
     while len(password) < 8:
@@ -846,7 +957,7 @@ def day5_part1(doorid='abbhdwsy'):
     return password
 
 
-def day4(rooms=None):
+def day4(rooms: Optional[List[str]] = None) -> Dict[str, int]:
 
     # Part 1: You are given a list of rooms formatted as a name (lowercase letters separated by dashes) followed by a dash, a sector ID, and a checksum in square brackets. A room name is valid if the checksum is the five most common letters in the encrypted name, in order, with ties broken by alphabetization. What is the sum of the sector IDs for all the valid rooms?
 
@@ -901,38 +1012,30 @@ def day4(rooms=None):
     return {'part1': idsum, 'part2': p2}
 
 
-def day3(triangles=None):
+def day3_check(triplet: List[int]) -> bool:
+    c = max(triplet)
+    triplet.remove(c)
+    a, b = triplet
+    if a + b > c:
+        return True
+    else:
+        return False
+
+
+def day3(triangles=None) -> Dict[str, int]:
 
     # Problem: given a list of numbers, separate them into groups of 3. How many of these groups could be the sides of a triangle (a + b > c)?
     if not triangles:
         triangles = input('day3.txt')
-
-    # Check each ordering of each group for valid triangle lengths
-    p1 = 0
-    for x in triangles:
-        t = list(map(int, x.split()))
-        c = max(t)
-        t.remove(c)
-        a, b = t
-        if a + b > c:
-            p1 += 1
+    htri: List[List[int]] = [list(map(int, x.split())) for x in triangles]
 
     # Part 2: Separate the numbers into groups of 3 down columns, not across rows, then check for triangles
+    i = range(0, len(htri), 3)
+    vtri: List[List[int]] = [list(y) for x in i for y in zip(htri[x], htri[x + 1], htri[x + 2])]
 
-    # Group those numbers into sets of 3
-    t = [x.split() for x in triangles]
-    i = range(0, len(t), 3)
-    vtri = [y for x in i for y in zip(t[x], t[x + 1], t[x + 2])]
-
-    # Check each ordering of each group for valid triangle lengths
-    p2 = 0
-    for x in vtri:
-        t = list(map(int, x))
-        c = max(t)
-        t.remove(c)
-        a, b = t
-        if a + b > c:
-            p2 += 1
+    # because day3_check modifies its input, don't run it until htri and vtri are both populated
+    p1: int = len([x for x in htri if day3_check(x)])
+    p2: int = len([x for x in vtri if day3_check(x)])
 
     return {'part1': p1, 'part2': p2}
 
@@ -1037,29 +1140,31 @@ def day2_part1(keys=None):
     return keycode
 
 
-def day1(path=None):
+def day1(path: Optional[str] = None) -> Dict[str, int]:
     # Part 1: You are given a series of directions indicating a direction to turn and a number of blocks of travel on a grid. How many blocks away from the origin do you end up? Count total blocks as x + y, not as the crow flies.
 
     if not path:
         path = input('day1.txt')
-    path = path[0].split(', ')
+    path: List[str] = path[0].split(', ')
 
     # Start at the origin facing direction North = 0.
     # var coordinates holds a list of points visited.
-    facing = 0
-    coordinates = [[0, 0]]
+    facing: int = 0
+    coordinates: List[List[int]] = [[0, 0]]
 
     # Processing each direction
     for step in path:
-        nextstep = coordinates[-1][:]   # start at the last known coordinate
-        turn = step[0]                  # break the direction into a turn and a distance
-        steps = int(step[1:])
+        # start at the last known coordinate
+        nextstep: List[int] = coordinates[-1][:]
+        # break the direction into a turn and a distance
+        turn: str = step[0]
+        steps: int = int(step[1:])
         if turn == "R":
             facing += 1
         else:
             facing -= 1
 
-        d = facing % 4
+        d: int = facing % 4
         while steps > 0:
             if d == 0:
                 nextstep[1] += 1
@@ -1073,7 +1178,7 @@ def day1(path=None):
             steps -= 1
 
     # Part 2: How many blocks away is the first location you visit twice?
-    doubles = list(filter(lambda point: coordinates.count(point) >= 2, coordinates))
+    doubles: List[List[int]] = list(filter(lambda point: coordinates.count(point) >= 2, coordinates))
 
     results = {}
     results['final'] = sum(map(abs, coordinates[-1]))

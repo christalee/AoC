@@ -7,15 +7,78 @@ from aoc_2016_code import *
 # write tests for nested fns? subproblems?
 
 
-def test_day10():
-    test = ['value 5 goes to bot 2',
-            'bot 2 gives low to bot 1 and high to bot 0',
-            'value 3 goes to bot 1',
-            'bot 1 gives low to output 1 and high to bot 0',
-            'bot 0 gives low to output 2 and high to output 0',
-            'value 2 goes to bot 2']
+def test_day20():
+    # TODO count unblocked IPs at the end of the range
+    assert day20(['5-8', '0-2', '4-7']) == {'part1': 3, 'part2': 1}
+    assert day20() == {'part1': 32259706, 'part2': 113}
 
-    assert day10(test)['part2'] == 30
+
+def test_day19():
+    assert day19(5) == 3
+    # assert day19() == 1808357
+
+
+def test_day18():
+    assert day18(3, ['..^^.']) == 6
+    assert day18(10, ['.^^.^.^^^^']) == 38
+    assert day18(40) == 1951
+    assert day18(400000) == 20002936
+
+
+def test_day17():
+    assert day17('ihgpwlah') == 'DDRRRD'
+    assert day17('kglvqrro') == 'DDUDRLRRUDRD'
+    assert day17('ulqzkmiv') == 'DRURDRUDDLLDLUURRDULRLDUUDDDRR'
+    assert day17() == 'RLDRUDRDDR'
+
+
+def test_day16():
+    assert day16(20, '10000') == '01100'
+    assert day16(272) == '10100011010101011'
+    assert day16(35651584) == '01010001101011001'
+
+
+def test_day15():
+    assert day15() == {'part1': 376777, 'part2': 3903937}
+
+
+# def test_day14():
+#     assert day14('abc') == {'part1': 22728, 'part2': 22551}
+#     assert day14() == {'part1': 16106, 'part2': 22423}
+
+
+def test_day13():
+    # Example:
+    # puzzle input = 10, walls are #, spaces are .
+    # shortest route from (1,1) to (7,4) is 11 steps (marked as O)
+    #   0123456789
+    # 0 .#.####.##
+    # 1 .O#..#...#
+    # 2 #OOO.##...
+    # 3 ###O#.###.
+    # 4 .##OO#OO#.
+    # 5 ..##OOO.#.
+    # 6 #...##.###
+
+    assert day13((4, 7), 10) == 11
+    assert day13() == 92
+
+
+def test_day12():
+    example = ['cpy 41 a', 'inc a', 'inc a', 'dec a', 'jnz a 2', 'dec a']
+    assert day12(example)['part1'] == 42
+    # assert day12() == {'part1': 318077, 'part2': 9227731}
+
+
+def test_day10():
+    example = ['value 5 goes to bot 2',
+               'bot 2 gives low to bot 1 and high to bot 0',
+               'value 3 goes to bot 1',
+               'bot 1 gives low to output 1 and high to bot 0',
+               'bot 0 gives low to output 2 and high to output 0',
+               'value 2 goes to bot 2']
+
+    assert day10(example)['part2'] == 30
     assert day10() == {'part1': 101, 'part2': 37789}
 
 
@@ -55,9 +118,9 @@ def test_day7():
 
 
 def test_day6():
-    test = ['eedadn', 'drvtee', 'eandsr', 'raavrd', 'atevrs', 'tsrnev', 'sdttsa', 'rasrtv', 'nssdts', 'ntnada', 'svetve', 'tesnvt', 'vntsnd', 'vrdear', 'dvrsen', 'enarar']
+    example = ['eedadn', 'drvtee', 'eandsr', 'raavrd', 'atevrs', 'tsrnev', 'sdttsa', 'rasrtv', 'nssdts', 'ntnada', 'svetve', 'tesnvt', 'vntsnd', 'vrdear', 'dvrsen', 'enarar']
 
-    assert day6(test) == {'part1': 'easter', 'part2': 'advent'}
+    assert day6(example) == {'part1': 'easter', 'part2': 'advent'}
     assert day6() == {'part1': 'agmwzecr', 'part2': 'owlaxqvq'}
 
 
@@ -71,15 +134,16 @@ def test_day6():
 
 
 def test_day4():
-    assert day4(['aaaaa-bbb-z-y-x-123[abxyz]'])['part1'] == 123
-    assert day4(['a-b-c-d-e-f-g-h-987[abcde]'])['part1'] == 987
-    assert day4(['not-a-real-room-404[oarel]'])['part1'] == 404
-    assert day4(['totally-real-room-200[decoy]'])['part1'] == 0
+    example = ['aaaaa-bbb-z-y-x-123[abxyz]', 'a-b-c-d-e-f-g-h-987[abcde]', 'not-a-real-room-404[oarel]', 'totally-real-room-200[decoy]']
 
+    assert day4(example)['part1'] == 1514
     assert day4() == {'part1': 173787, 'part2': 548}
 
 
 def test_day3():
+    assert day3_check([5, 10, 25]) == False
+    assert day3_check([25, 10, 25]) == True
+
     assert day3(['5 10 25', '25 10 25', '25 10 25']) == {'part1': 2, 'part2': 3}
     assert day3() == {'part1': 983, 'part2': 1836}
 
