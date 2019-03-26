@@ -13,22 +13,22 @@ import numpy as np
 import pandas as pd
 
 
-def input(filename):
+def input(filename: str):
     with open(filename, 'r') as input:
         data = [x.strip() for x in input]
 
     return data
 
 
-# Is there any way to speed this up?
-def day10(i, digits='1113122113'):
+# Is there any way to speed this up? concurrent.futures?
+def day10(i: int, digits: str = '1113122113'):
     while i > 0:
-        print(i)
-        numerals = []
+        numerals: List[str] = []
         while len(digits) > 0:
             m = re.match(r'(\d)\1*', digits)
-            numerals.append(m.group())
-            digits = digits[m.end():]
+            if m:
+                numerals.append(m.group())
+                digits = digits[m.end():]
 
         for n in numerals:
             c = len(n)
@@ -41,14 +41,14 @@ def day9(distances=None):
     if not distances:
         distances = input('day9.txt')
 
-    parsed = []
+    parsed: List[List[str]] = []
     for d in distances:
         s = d.split()
         s.remove('to')
         s.remove('=')
         parsed.append(s)
 
-    stops = []
+    stops: List[str] = []
     for d in parsed:
         if d[0] not in stops:
             stops.append(d[0])
@@ -61,10 +61,9 @@ def day9(distances=None):
         legs.loc[d[0], d[1]] = d[2]
         legs.loc[d[1], d[0]] = d[2]
 
-    # This calculates each journey twice, backwards and forwards
-    # also that for/enumerate/if loop is clumsy - fix it
+    # that for/enumerate/if loop is clumsy - fix it
     # maybe lookup distances directly in parsed[] instead of legs[DF]?
-    journeys = {}
+    journeys: Dict[str, int] = {}
     itineraries = itertools.permutations(stops)
     for i in itineraries:
         d = 0
@@ -121,7 +120,7 @@ def day7(instructions=None):
     if not instructions:
         instructions = input('day7.txt')
 
-    wires = {}
+    wires: Dict[str, int] = {}
 
     def valid(x):
         if x.isdecimal():
@@ -170,7 +169,7 @@ def day7(instructions=None):
     return wires
 
 
-def day6_part2(instructions=None):
+def day6_part2(instructions: Optional[List[str]] = None) -> int:
     lights = np.zeros((1000, 1000), dtype=int)
 
     if not instructions:
@@ -192,7 +191,7 @@ def day6_part2(instructions=None):
     return np.sum(lights)
 
 
-def day6_part1(instructions=None):
+def day6_part1(instructions: Optional[List[str]] = None) -> int:
     lights = np.zeros((1000, 1000), dtype=int)
 
     if not instructions:
@@ -209,18 +208,16 @@ def day6_part1(instructions=None):
         if pieces[1] == 'off':
             lights[start[0]:end[0] + 1, start[1]:end[1] + 1] = 0
         if pieces[0] == 'toggle':
-            lights[start[0]:end[0] + 1, start[1]:end[1]
-                   + 1] = np.bitwise_xor(lights[start[0]:end[0] + 1, start[1]:end[1] + 1], 1)
+            lights[start[0]:end[0] + 1, start[1]:end[1] + 1] = np.bitwise_xor(lights[start[0]:end[0] + 1, start[1]:end[1] + 1], 1)
 
     return np.sum(lights)
 
 
-def day5_part2(strings: List[str] = None) -> int:
+def day5_part2(strings: Optional[List[str]] = None) -> int:
     if not strings:
         strings = input('day5.txt')
 
     results: List[bool] = []
-
     for s in strings:
         nice = False
         if re.search(r'(\w)\w\1', s) and re.search(r'(\w{2}).*\1', s):
@@ -231,12 +228,11 @@ def day5_part2(strings: List[str] = None) -> int:
     return results.count(True)
 
 
-def day5_part1(strings: List[str] = None) -> int:
+def day5_part1(strings: Optional[List[str]] = None) -> int:
     if not strings:
         strings = input('day5.txt')
 
     results: List[bool] = []
-
     for s in strings:
         nice = False
         if re.search(r'([aeiou].*){3}', s) and re.search(r'(\w)\1', s):
@@ -263,12 +259,11 @@ def day4(key: str = 'yzbqklnj') -> int:
     return i - 1
 
 
-def day3(arrows: str = None) -> int:
+def day3_part2(arrows: Optional[str] = None) -> int:
     if not arrows:
         with open('day3.txt', 'r') as input:
             arrows = input.read()
 
-    # location: Dict[str, int] = {'x': 0, 'y': 0}
     santa: Dict[str, int] = {'x': 0, 'y': 0}
     robot: Dict[str, int] = {'x': 0, 'y': 0}
     presents: Dict[str, int] = {'[0, 0]': 2}
@@ -289,7 +284,34 @@ def day3(arrows: str = None) -> int:
             location['x'] -= 1
 
         here = str(list(location.values()))
-        if here in presents.keys():
+        if here in presents:
+            presents[here] += 1
+        else:
+            presents[here] = 1
+
+    return len(presents)
+
+
+def day3_part1(arrows: Optional[str] = None) -> int:
+    if not arrows:
+        with open('day3.txt', 'r') as input:
+            arrows = input.read()
+
+    location: Dict[str, int] = {'x': 0, 'y': 0}
+    presents: Dict[str, int] = {'[0, 0]': 2}
+
+    for a in arrows:
+        if a == '>':
+            location['y'] += 1
+        if a == '<':
+            location['y'] -= 1
+        if a == '^':
+            location['x'] += 1
+        if a == 'v':
+            location['x'] -= 1
+
+        here = str(list(location.values()))
+        if here in presents:
             presents[here] += 1
         else:
             presents[here] = 1
@@ -336,4 +358,8 @@ def day1(parens: Optional[str] = None) -> Dict[str, Union[int, List[int]]]:
             basement.append(i + 1)
 
     # floor = parens.count('(') - parens.count(')')
-    return {'floor': floor, 'basement': basement}
+    if len(basement) > 0:
+        b = basement[0]
+    else:
+        b = 0
+    return {'floor': floor, 'basement': b}
