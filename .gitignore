@@ -1,7 +1,8 @@
+*cache*
 *.txt
 *.pyc
 .DS_Store
+
 .ipynb_checkpoints/
-*cache*
 cb input/
 fns/
