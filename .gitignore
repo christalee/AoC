@@ -2,7 +2,6 @@
 *.pyc
 .DS_Store
 .ipynb_checkpoints/
-__pycache__/
-.pytest_cache/
-.mypy_cache/
+*cache*
 cb input/
+fns/
