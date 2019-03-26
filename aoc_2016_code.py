@@ -16,7 +16,7 @@ import numpy as np
 
 
 def input(filename: str):
-    with open(filename, 'r') as input:
+    with open('input_2016/' + filename, 'r') as input:
         data = [x.strip() for x in input]
 
     return data

@@ -21,7 +21,7 @@ def test_day9():
 
 
 def test_day8():
-    with open('day8_test.txt', 'r') as input:
+    with open('input_2015/day8_test.txt', 'r') as input:
         test = input.read().split()
     assert day8_part1(test) == 12
     assert day8_part2(test) == 19

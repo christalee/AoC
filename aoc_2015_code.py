@@ -14,7 +14,7 @@ import pandas as pd
 
 
 def input(filename: str):
-    with open(filename, 'r') as input:
+    with open('input_2015/' + filename, 'r') as input:
         data = [x.strip() for x in input]
 
     return data
@@ -77,7 +77,7 @@ def day9(distances=None):
 
 def day8_part2(strings=None):
     if not strings:
-        with open('day8.txt', 'r') as input:
+        with open('input_2015/day8.txt', 'r') as input:
             strings = input.read().split()
 
     raw = sum(map(len, strings))
@@ -96,7 +96,7 @@ def day8_part2(strings=None):
 # TODO change these all to re.sub / skip the if clauses
 def day8_part1(strings=None):
     if not strings:
-        with open('day8.txt', 'r') as input:
+        with open('input_2015/day8.txt', 'r') as input:
             strings = input.read().split()
 
     raw = sum(map(len, strings))
@@ -261,7 +261,7 @@ def day4(key: str = 'yzbqklnj') -> int:
 
 def day3_part2(arrows: Optional[str] = None) -> int:
     if not arrows:
-        with open('day3.txt', 'r') as input:
+        with open('input_2015/day3.txt', 'r') as input:
             arrows = input.read()
 
     santa: Dict[str, int] = {'x': 0, 'y': 0}
@@ -294,7 +294,7 @@ def day3_part2(arrows: Optional[str] = None) -> int:
 
 def day3_part1(arrows: Optional[str] = None) -> int:
     if not arrows:
-        with open('day3.txt', 'r') as input:
+        with open('input_2015/day3.txt', 'r') as input:
             arrows = input.read()
 
     location: Dict[str, int] = {'x': 0, 'y': 0}
@@ -343,7 +343,7 @@ def day2(box_list: Optional[List[str]] = None) -> Dict[str, int]:
 
 def day1(parens: Optional[str] = None) -> Dict[str, Union[int, List[int]]]:
     if not parens:
-        with open('day1.txt', 'r') as input:
+        with open('input_2015/day1.txt', 'r') as input:
             parens = input.read()
 
     floor: int = 0

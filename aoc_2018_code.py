@@ -11,7 +11,7 @@ import pandas as pd
 
 
 def input(filename):
-    with open(filename, 'r') as input:
+    with open('input_2018/' + filename, 'r') as input:
         data = [x.strip() for x in input]
 
     return data
@@ -95,7 +95,7 @@ def day4_part1(records=None):
 
 def day1_part2(frequencies=None):
     if not frequencies:
-        with open('day1.txt', 'r') as input:
+        with open('input_2018/day1.txt', 'r') as input:
             frequencies = [int(x.strip()) for x in input]
 
     freq = 0
@@ -115,7 +115,7 @@ def day1_part2(frequencies=None):
 
 def day1_part1(frequencies=None):
     if not frequencies:
-        with open('day1.txt', 'r') as input:
+        with open('input_2018/day1.txt', 'r') as input:
             frequencies = [int(x.strip()) for x in input]
 
     return sum(frequencies)
