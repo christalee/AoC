@@ -37,8 +37,8 @@ def test_day4():
     assert day4_part1(example) == 240
     assert day4_part2(example) == 4455
 
-    assert day4_part1() == 39698
-    assert day4_part2() == 14920
+    # assert day4_part1() == 39698
+    # assert day4_part2() == 14920
 
 
 def test_day3():

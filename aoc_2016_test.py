@@ -22,7 +22,7 @@ def test_day18():
     assert day18(3, ['..^^.']) == 6
     assert day18(10, ['.^^.^.^^^^']) == 38
     assert day18(40) == 1951
-    assert day18(400000) == 20002936
+    # assert day18(400000) == 20002936
 
 
 def test_day17():
@@ -35,11 +35,11 @@ def test_day17():
 def test_day16():
     assert day16(20, '10000') == '01100'
     assert day16(272) == '10100011010101011'
-    assert day16(35651584) == '01010001101011001'
+    # assert day16(35651584) == '01010001101011001'
 
 
-def test_day15():
-    assert day15() == {'part1': 376777, 'part2': 3903937}
+# def test_day15():
+#     assert day15() == {'part1': 376777, 'part2': 3903937}
 
 
 # def test_day14():
@@ -61,7 +61,7 @@ def test_day13():
     # 6 #...##.###
 
     assert day13((4, 7), 10) == 11
-    assert day13() == 92
+    # assert day13() == 92
 
 
 def test_day12():
@@ -124,7 +124,6 @@ def test_day6():
     assert day6() == {'part1': 'agmwzecr', 'part2': 'owlaxqvq'}
 
 
-# skip this, it takes forever to run
 # def test_day5():
 #     assert day5_part1('abc') == '18f47a30'
 #     assert day5_part1() == '801b56a7'
