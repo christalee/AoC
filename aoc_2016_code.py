@@ -7,12 +7,13 @@
 
 import copy
 import hashlib
-import pprint
+import itertools
 import re
 import string
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 import numpy as np
+import pandas as pd
 
 
 def input(filename: str):
@@ -20,6 +21,136 @@ def input(filename: str):
         data = [x.strip() for x in input]
 
     return data
+
+
+def day24(raw=None):
+    if not raw:
+        raw = input('day24.txt')
+    chars = list(map(list, raw))
+    maze = np.array(chars, ndmin=2)
+
+    goals = {}
+    # TODO is there a simpler way of extracting the goal locations?
+    i = np.nditer(maze, flags=['multi_index'], op_flags=['readwrite'])
+    while not i.finished:
+        if np.char.isdecimal(i[0]):
+            goals[int(i[0])] = i.multi_index
+        i.iternext()
+
+    def pathfind(border):
+        nonlocal d, visited
+        newborder = []
+        for p in border:
+            if p == goal:
+                return d
+            else:
+                newborder.extend(nextstep(p))
+
+        d += 1
+        visited = visited | set(newborder)
+        return list(set(newborder))
+
+    def nextstep(point):
+        x, y = point
+        around = [a for a in [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+                  if (maze[a] != '#' and a not in visited)]
+
+        return around
+
+    g = list(goals.keys())
+    g.sort()
+    distances = pd.DataFrame(columns=g, index=g)
+
+    # TODO is this overly nested? generate the pairwise indices directly?
+    for x in g:
+        for y in g:
+            if pd.isna(distances.loc[x, y]):
+                visited = set([goals[x]])
+                goal = goals[y]
+                d = 0
+                frontier = [goals[x]]
+
+                while not isinstance(frontier, int):
+                    frontier = pathfind(frontier)
+
+                distances.loc[x, y] = frontier
+                distances.loc[y, x] = frontier
+
+    # cf. aoc_2015_code/day9
+    g.remove(0)
+    x = itertools.permutations(g)
+    trips = {}
+    rounds = {}
+
+    for itinerary in x:
+        itinerary = (0,) + itinerary
+        d = 0
+        for i, s in enumerate(itinerary):
+            if i + 1 < len(itinerary):
+                d += int(distances.loc[s, itinerary[i + 1]])
+        trips[itinerary] = d
+        rounds[itinerary] = d + int(distances.loc[itinerary[-1], 0])
+
+    t = sorted(trips, key=lambda x: trips[x])
+    r = sorted(rounds, key=lambda x: rounds[x])
+
+    return {'part1': trips[t[0]], 'part2': rounds[r[0]]}
+
+
+def day21(pw=None, commands=None):
+    if not pw:
+        pw = 'abcdefgh'
+    if not commands:
+        commands = input('day21.txt')
+
+    def scramble(text):
+        letters = list(text)
+
+        for com in commands:
+            c = com.split(' ')
+            x = c[2]
+            y = c[-1]
+
+            if c[0] == 'swap':
+                newtext = letters[:]
+                if c[1] == 'position':
+                    newtext[int(x)] = letters[int(y)]
+                    newtext[int(y)] = letters[int(x)]
+                if c[1] == 'letter':
+                    newtext[letters.index(x)] = y
+                    newtext[letters.index(y)] = x
+
+            if c[0] == 'rotate':
+                if c[1] == 'left':
+                    newtext = letters[int(x):] + letters[0:int(x)]
+                if c[1] == 'right':
+                    newtext = letters[-int(x):] + letters[0:-int(x)]
+                if c[1] == 'based':
+                    i = letters.index(y) + 1
+                    if i >= 5:
+                        i += 1
+                    i = i % len(letters)
+                    newtext = letters[-i:] + letters[0:-i]
+
+            if c[0] == 'reverse':
+                ss = letters[int(x):int(y) + 1]
+                newtext[int(x):int(y) + 1] = ss[::-1]
+
+            if c[0] == 'move':
+                l = letters.pop(int(x))
+                letters.insert(int(y), l)
+                newtext = letters[:]
+
+            letters = newtext
+
+        return ''.join(letters)
+
+    pws = itertools.permutations('abcdefgh')
+    for p in pws:
+        if scramble(p) == 'fbgdceah':
+            p2 = ''.join(p)
+
+    return {'part1': scramble(pw), 'part2': p2}
 
 
 def day20(blocked=None):
@@ -40,12 +171,60 @@ def day20(blocked=None):
 
 
 def day19(size=3001330):
-    elves = list(range(size))
-    while len(elves) > 1:
-        for i, e in enumerate(elves):
-            elves.pop((i + 1) % len(elves))
+    # First I solved this problem by walking the list, which was prohibitively slow for large n
 
-    return elves[0] + 1
+    # p1 = list(range(size))
+    # while len(p1) > 1:
+    #     for i, e in enumerate(p1):
+    #         p1.pop((i + 1) % len(p1))
+
+    # Seriously, this code threatened to run for 24+ hrs
+
+    # p2 = list(range(size))
+    # while len(p2) > 1:
+    #     ref = copy.deepcopy(p2)
+    #     for r in ref:
+    #         if r in p2:
+    #             x = p2.index(r)
+    #             p2.pop((x + math.floor(len(p2) / 2)) % len(p2))
+    #             if r == p2[x - 2]:
+    #                 break
+
+    # I tried speeding up execution with threading or multiprocessing, but concluded that the computation is CPU-bound and modifies a single massive data structure - I would have to chunk it manually. Looking for a pattern in the output, I derived a formula for both results (see day19.ipynb to visualize)
+
+    # part1: 2^n = 1, then follow 2^n odd numbers (so the last is 2^n+1 - 1 : 2^n+1 - 1)
+    def part1(x):
+        powers = [2**n for n in range(25)]
+        odds = [1 + 2 * n for n in range(x)]
+
+        t = [a for a in powers if a <= x]
+        r = x - t[-1]
+        return odds[r]
+
+    # part2: 1 : 1, if n : n then start 1, 2, 3 until n : n/2, then continue sequence of odds until n : n
+    def part2(x):
+        odds = [1 + 2 * n for n in range(x)]
+
+        for r in range(15):
+            if 3**r >= x:
+                a = r - 1
+                break
+
+        p = 3**a
+        r = x - p
+        d = 3**(a + 1) - p
+
+        if r <= d // 2:
+            y = r
+        else:
+            s = r - d // 2
+            i = odds.index(p)
+            y = odds[i + s]
+
+        return y
+
+    # These solutions return in less than a second!
+    return {'part1': part1(size), 'part2': part2(size)}
 
 
 def day18(size, row=None):
@@ -98,52 +277,67 @@ def day18(size, row=None):
 def day17(seed='yjjvjgan'):
     path = ''
     location = [0, 0]
-    pathlist = {path: location}
+    pathlist = [[path, location]]
+    results = []
+    deadends = []
 
-    def pathfind(pathlist):
-        newpaths = {}
-        for (path, location) in pathlist.items():
-            if location == [3, 3]:
-                newpaths = path
-                break
+    # TODO review vs. day13, day24
+    def pathfind(paths):
+        newpaths = []
+        for p in paths:
+            if p[1] == [3, 3]:
+                results.append(p[0])
             else:
-                m = hashlib.md5()
-                m.update((seed + path).encode())
-                doors = [x in 'bcdef' for x in m.hexdigest().lower()[0:4]]
-                options = [d[0] for d in list(zip('UDLR', doors)) if d[1]]
-
-                for o in options:
-                    q = copy.deepcopy(location)
-                    if o == "U":
-                        if q[1] == 0:
-                            pass
-                        else:
-                            q[1] -= 1
-                    if o == "D":
-                        if q[1] == 3:
-                            pass
-                        else:
-                            q[1] += 1
-                    if o == "R":
-                        if q[0] == 3:
-                            pass
-                        else:
-                            q[0] += 1
-                    if o == "L":
-                        if q[0] == 0:
-                            pass
-                        else:
-                            q[0] -= 1
-
-                    p = path + o
-                    newpaths[p] = q
+                newpaths.extend(nextstep(p))
 
         return newpaths
 
-    while not isinstance(pathlist, str):
+    def doorfind(steps):
+        path, location = steps
+        m = hashlib.md5()
+        m.update((seed + path).encode())
+        doors = [x in 'bcdef' for x in m.hexdigest().lower()[0:4]]
+        o = [d[0] for d in list(zip('UDLR', doors)) if d[1]]
+
+        if ('U' in o and location[1] == 0):
+            o.remove('U')
+        if ("D" in o and location[1] == 3):
+            o.remove('D')
+        if ("R" in o and location[0] == 3):
+            o.remove('R')
+        if ("L" in o and location[0] == 0):
+            o.remove('L')
+
+        if o == []:
+            deadends.append(path)
+
+        return o
+
+    def nextstep(steps):
+        path, location = steps
+        options = []
+        doors = doorfind(steps)
+
+        for o in doors:
+            q = copy.deepcopy(location)
+            if o == "U":
+                q[1] -= 1
+            elif o == "D":
+                q[1] += 1
+            elif o == "R":
+                q[0] += 1
+            elif o == "L":
+                q[0] -= 1
+
+            p = path + o
+            options.append([p, q])
+
+        return options
+
+    while len(pathlist) > 0:
         pathlist = pathfind(pathlist)
 
-    return pathlist
+    return {"part1": results[0], "part2": len(results[-1])}
 
 
 def day16(disk: int, seed: Optional[str] = None):
@@ -295,39 +489,43 @@ def day13(goal=(39, 31), seed=1350):
         return f
 
     # since numpy arrays are indexed as (row, column), goal must be given as (y, x)
-    position = (1, 1)
-    paths = [['start', position]]
+    frontier = [(1, 1)]
+    visited = set(frontier)
+    points = 0
+    d = 0
+
     h = g(seed)
     maze = np.array([[h(x, y) for x in range(60)] for y in range(60)])
 
-    def pathfind(pathlist):
-        newpaths = []
-        for p in pathlist:
-            if p[-1] == goal:
-                newpaths = len(p) - 2
-                break
+    # TODO this is nearly identical to day24, refactor?
+    def pathfind(border):
+        nonlocal d, visited, points
+
+        if d == 50:
+            points = len(visited)
+
+        newborder = []
+        for p in border:
+            if p == goal:
+                return d
             else:
-                newpaths.extend(nextstep(p))
+                newborder.extend(nextstep(p))
 
-        return newpaths
+        d += 1
+        visited = visited | set(newborder)
+        return list(set(newborder))
 
-    def nextstep(steps):
-        x, y = steps[-1]
+    def nextstep(point):
+        x, y = point
         around = [a for a in [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
-                  if (maze[a] == 0 and a not in steps and -1 not in a)]
-        options = []
-        for n in around:
-            q = copy.deepcopy(steps)
-            q.append(n)
-            options.append(q)
+                  if (maze[a] == 0 and a not in visited and -1 not in a)]
 
-        return options
+        return around
 
-    # TODO refactor this to use a real while loop
-    while not isinstance(paths, int):
-        paths = pathfind(paths)
+    while not isinstance(frontier, int):
+        frontier = pathfind(frontier)
 
-    return paths
+    return {'part1': frontier, 'part2': points}
 
 
 def day12(commands=None):
@@ -382,196 +580,126 @@ def day12(commands=None):
     return {'part1': assemble(p1), 'part2': assemble(p2)}
 
 
-def day11():
+def day11(floors=None):
     # Rules:
-    # 1. You and the elevator begin on F1.
+    # 1. You and the elevator begin on F0.
     # 2. At all times, each floor (+ elevator) can only contain all generators, all microchips, nothing, or a combination such that all microchips are with their generators. (A generator may hang out without its microchip.)
     # 3. The elevator only moves one floor at a time.
     # 4. The elevator will only move at least one and no more than two generators or microchips.
-    # 5. The goal is to get all microchips and generators (10) to F4.
+    # 5. The goal is to get all microchips and generators (10) to F3.
 
     # Strategy
-    # 0. Write a fn to evaluate if moves are valid.
-    # 1. state = [all floors + elevator] -> store in a list? after each move, or a dictionary where each state is a key?
-    # 2. Increment count carefully everytime a move is successfully made
-    # 3. Store each state in a tuple with its move count
-    # 4. For each state, increment the count, then locate the elevator, then check for valid moves among the elevator cargo and its floor -> one floor up or down.
-    # 5. Also write a move function to get things in and out of the elevator -> appended to the correct floor.
-    # 6. If a move is valid, execute it (make copies?). If the final state is not already in the dict of states, add it along with its count.
-    # 7. Do I need to sort things before I put them in the dict so they compare properly? what a headache.
+    # keep a list of possible states after m moves, and a count of m
+    # loop through those states to find the next states and increment m
+    # write a fn to check for valid states
+    # write a fn to generate all possible next states
+    # track already visited states to avoid revisiting them
 
-    # represent state as a list with 4 elements, representing each floor of the building.
-    # elements: thulium (Tm), plutonium (Pu), strontium (Sr), promethium (Pr), ruthenium (Ru)
+    # represent state as a list containing the elevator location and a list for each floor of the building.
+    # elements: thulium (T), plutonium (U), strontium (S), promethium (P), ruthenium (R), elerium (E), dilithium (D)
     # F4:
-    # F3: PrG, PrM, RuG, RuM
-    # F2: PuM, SrM
-    # F1: TmG, TmM, PuG, SrG, E
+    # F3: PG, PM, RG, RM
+    # F2: UM, SM
+    # F1: TG, TM, UG, SG, (EM, EG, DM, DG)
 
-    state = [[["Tm.G", "Tm.M", "Pu.G", "Sr.G"],
-              ["Pu.M", "Sr.M"],
-              ["Pr.G", "Pr.M", "Ru.G", "Ru.M"],
-              [""]]]
-    elevator = 0
+    # for best results, sort the initial state
+    p1 = [[0,
+           ["SG", "TG", "TM", "UG"],
+           ["SM", "UM"],
+           ["PG", "PM", "RG", "RM"],
+           []]]
+    p2 = [[0,
+           ["DG", "DM", "EG", "EM", "SG", "TG", "TM", "UG"],
+           ["SM", "UM"],
+           ["PG", "PM", "RG", "RM"],
+           []]]
     moves = 0
-    paths = {str(state): moves}
+    visited = {str(floors[0])}
+    total = len([i for s in floors[0][1:] for i in s])
 
-    def onetwo(x):
-        y = [([a, b] if (not a == b) and (a < b) else [a]) for a in x for b in x]
+    def validate(state):
+        checks = []
+        for floor in state:
+            if isinstance(floor, int) or len(floor) <= 1:
+                checks.append(True)
+            else:
+                for a, b in itertools.combinations(floor, 2):
+                    if a[-1] == "M" and b[-1] == "G" and a[0] + "G" not in floor:
+                        checks.append(False)
+                    if b[-1] == "M" and a[-1] == "G" and b[0] + "G" not in floor:
+                        checks.append(False)
+
+        return False not in checks
+
+    def taketwo(x):
+        y = list(map(list, itertools.combinations(x, 2)))
+        for i in x:
+            y.append([i])
+
         return y
 
-    # next moves: find the elevator, take 1 or 2 items to the adjacent floors
-    # takes a state s [from the previous m], and returns a list of states m
+    def move(state, item, start, end):
+        y = copy.deepcopy(state)
+        for x in item:
+            y[start].remove(x)
+        y[end].extend(item)
+
+        for f in y:
+            f.sort()
+
+        return y
+
     def nextmoves(s):
+        elevator = s[0]
+        floors = s[1:]
         m = []
-        e = s[-1]
-        lowdest = e - 1
-        highdest = e + 1
+        lower = elevator - 1
+        higher = elevator + 1
+        options = taketwo(floors[elevator])
 
-        for item in onetwo(s[e]):
-            if lowdest > 0:
-                y = copy.deepcopy(s)
-                for x in item:
-                    y[e].remove(x)
-                y[lowdest].extend(item)
-                m.append(y.append(lowdest))
+        if lower >= 0:
+            for o in options:
+                n = move(floors, o, elevator, lower)
+                if validate(n):
+                    m.append([lower] + n)
 
-            if highdest < 5:
-                y = copy.deepcopy(s)
-                for x in item:
-                    y[e].remove(x)
-                y[highdest].extend(item)
-                m.append(y.append(highdest))
+        if higher < 4:
+            for o in options:
+                n = move(floors, o, elevator, higher)
+                if validate(n):
+                    m.append([higher] + n)
+
         return m
 
-    def isvalid(s):
-        e = s.pop()
-        for a in s[e][:]:
-            a = a.partition(".")
-            if a[2] == "M":
-                pass
+    def pathfind(border):
+        nonlocal moves, visited
 
-    # Code below here needs to be rewritten
-    #
-    # # For a given state, determine whether it violates any of the rules above, returning True or False accordingly. (Create a list of T/F tests and make sure all are T? Or is that clumsy?)
-    # # invalid moves: anything that leaves a microchip without its corresponding generator
-    # def isValid(s):
-    #     location = s['E']
-    #
-    #     # the floor is empty
-    #     if len(s[location]) == 0:
-    #         return True
-    #
-    #     for x in s[location]:
-    #         element = x[0]
-    #         component = x[1]
-    #         tx = []
-    #         for y in s[location]:
-    #             ty = []
-    #             if element == y[0]:
-    #                 ty.append[True]
-    #         # Need to revisit all this logic: is this the best way to track what combinations are ok?
-    #         if t == [True, True]:
-    #             return True
-    #         else:
-    #             return False
-    #
-    #
-    #
-    # while len(state['F4']) < 10:
-    #     # generate a list of possible next states
-    #     n = nextStates(state)
-    #     # add valid states + move count to statedict
-    #     for each in n:
-    #         if isValid(each):
-    #             if str(each) not in statedict:
-    #                 statedict[str(each)] = count
-    #             # TODO need to figure out how to represent states as keys; maybe write a function for it?
-    #
-    #     count += 1
-    #     # recurse on all valid states? what does count do on recursion?
-    #
-    # # at the end, print the first state where all items are on F4? use that to look up its count in the dictionary? or just print count directly?
-    # print statedict
-    # print count
-
-
-def day11_test():
-
-    # store each item as a dictionary? label floors with strings or in variables?
-    # F1 = {'TmG': {'element': 'Tm', 'type': 'G'}, }
-
-    state = {
-        4: [],
-        3: [('Pr', 'G'), ('Pr', 'M'), ('Ru', 'G'), ('Ru', 'M')],
-        2: [('Pu', 'M'), ('Sr', 'M')],
-        1: [('Tm', 'G'), ('Tm', 'M'), ('Pu', 'G'), ('Sr', 'G')],
-        'E': 1
-    }
-
-    # change this to be just lists?
-    state = {
-        '4': [],
-        '3': [('Li', 'G')],
-        '2': [('H', 'G')],
-        '1': [('H', 'M'), ('Li', 'M')],
-        'E': [2]
-    }
-
-    moves = 0
-
-    statedict = {str(state): moves}
-
-    # given a state s, returns a list of reachable states ms
-    def nextmoves(s):
-        ms = []
-        for each in s:
-            location = each['E'][0]
-            up = location + 1
-            down = location - 1
-        # Elevator can move 1 or 2 items in location, to either of the nextlocations.
-            x = copy.deepcopy(s)
-            x[str(location)].remove()
-            for item in things:
-                pass
-                # currently only moves 1 item. How to move two? "choose any two?"
-                #        moveUp = transfer(s, item, str(location + 1))
-                #        moveDown = transfer(s, item, str(location -1))
-                #        moves.extend([moveUp, moveDown])
-        return ms
-
-    # don't need this?
-    def transfer(s, item, floor):
-        # need to make copies, not modify s itself
-        for each in s:
-            if item in s[each]:
-                s[each].remove(item)
-        s[floor].append(item)
-        return s
-
-    def isValid(s):
-        location = str(s['E'][0])
-
-        # the floor is empty
-        if len(s[location]) == 0:
-            return True
-
-        for x in s[location]:
-            element = x[0]
-            component = x[1]
-            tx = []
-            for y in s[location]:
-                ty = []
-                if element == y[0]:
-                    ty.append[True]
-            # Need to revisit all this logic: is this the best way to track what combinations are ok?
-            if t == [True, True]:
-                return True
+        newborder = []
+        for p in border:
+            if len(p[-1]) == total:
+                newborder = moves
+                break
             else:
-                return False
+                for m in nextmoves(p):
+                    if str(m) not in visited:
+                        visited.add(str(m))
+                        newborder.append(m)
+
+        moves += 1
+        return newborder
+
+    def solve(floors):
+        while not isinstance(floors, int):
+            floors = pathfind(floors)
+        return floors
+
+    if not floors:
+        return {'part1': solve(p1), 'part2': solve(p2)}
+    else:
+        return solve(floors)
 
 
 def river():
-
     # represent state as a list with 2 elements, representing each side of the river. Items: Boat, Chicken, Fox, Wheat (alphabetical)
     state = [[["B", "C", "F", "W"], [""]]]
     moves = 0

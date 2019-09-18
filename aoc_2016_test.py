@@ -7,6 +7,31 @@ from aoc_2016_code import *
 # write tests for nested fns? subproblems?
 
 
+def test_day24():
+    example = ["###########",
+               "#0.1.....2#",
+               "#.#######.#",
+               "#4.......3#",
+               "###########"]
+
+    assert day24(example) == {'part1': 14, 'part2': 20}
+    assert day24() == {'part1': 518, 'part2': 716}
+
+
+def test_day21():
+    example = ['swap position 4 with position 0',
+               'swap letter d with letter b',
+               'reverse positions 0 through 4',
+               'rotate left 1 step',
+               'move position 1 to position 4',
+               'move position 3 to position 0',
+               'rotate based on position of letter b',
+               'rotate based on position of letter d']
+
+    assert day21('abcde', example)['part1'] == 'decab'
+    assert day21() == {'part1': 'bdfhgeca', 'part2': 'gdfcabeh'}
+
+
 def test_day20():
     # TODO count unblocked IPs at the end of the range
     assert day20(['5-8', '0-2', '4-7']) == {'part1': 3, 'part2': 1}
@@ -14,8 +39,8 @@ def test_day20():
 
 
 def test_day19():
-    assert day19(5) == 3
-    # assert day19() == 1808357
+    assert day19(5) == {'part1': 3, 'part2': 2}
+    assert day19() == {'part1': 1808357, 'part2': 1407007}
 
 
 def test_day18():
@@ -26,10 +51,10 @@ def test_day18():
 
 
 def test_day17():
-    assert day17('ihgpwlah') == 'DDRRRD'
-    assert day17('kglvqrro') == 'DDUDRLRRUDRD'
-    assert day17('ulqzkmiv') == 'DRURDRUDDLLDLUURRDULRLDUUDDDRR'
-    assert day17() == 'RLDRUDRDDR'
+    assert day17('ihgpwlah') == {'part1': 'DDRRRD', "part2": 370}
+    assert day17('kglvqrro') == {'part1': 'DDUDRLRRUDRD', 'part2': 492}
+    assert day17('ulqzkmiv') == {'part1': 'DRURDRUDDLLDLUURRDULRLDUUDDDRR', 'part2': 830}
+    assert day17() == {'part1': 'RLDRUDRDDR', 'part2': 498}
 
 
 def test_day16():
@@ -60,14 +85,20 @@ def test_day13():
     # 5 ..##OOO.#.
     # 6 #...##.###
 
-    assert day13((4, 7), 10) == 11
-    # assert day13() == 92
+    assert day13((4, 7), 10)['part1'] == 11
+    assert day13() == {'part1': 92, 'part2': 124}
 
 
 def test_day12():
     example = ['cpy 41 a', 'inc a', 'inc a', 'dec a', 'jnz a 2', 'dec a']
     assert day12(example)['part1'] == 42
     # assert day12() == {'part1': 318077, 'part2': 9227731}
+
+
+def test_day11():
+    example = [[0, ['HM', "LM"], ["HG"], ["LG"], []]]
+    assert day11(example) == 11
+    # assert day11() == {'part1': 31, 'part2': 55}
 
 
 def test_day10():
@@ -140,8 +171,8 @@ def test_day4():
 
 
 def test_day3():
-    assert day3_check([5, 10, 25]) == False
-    assert day3_check([25, 10, 25]) == True
+    assert not day3_check([5, 10, 25])
+    assert day3_check([25, 10, 25])
 
     assert day3(['5 10 25', '25 10 25', '25 10 25']) == {'part1': 2, 'part2': 3}
     assert day3() == {'part1': 983, 'part2': 1836}
