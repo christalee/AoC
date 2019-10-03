@@ -22,8 +22,22 @@ def input(filename: str):
 
     return data
 
+# day25 - see day25.ipynb for details
+# Problem: using the assembler from day23, find the lowest positive integer that will produce a clock signal (0, 1, 0, 1...) when input as register a.
+
+# Solution: This problem has no tgl instructions, but it adds an 'output x' that sends x to the antenna. Collecting 100 samples of signal in a list allows me to test a range of inputs and check the output against the desired [0, 1] * 50; maybe not the most elegant but it does work.
+
+# TODO translate all this assembly into the corresponding loops and operations
+
 
 def day24(raw=None):
+
+    # Part 1: given a maze and a robot that can only move in x and y, what is the least number of steps required to visit all the goals (marked with integers), starting from location 0?
+
+    # Part 2: What is the least number of steps required to visit all the goals and then return to location 0?
+
+    # Another pathfinding problem, hooray
+    # First, draw the map and locate all the goal locations
     if not raw:
         raw = input('day24.txt')
     chars = list(map(list, raw))
@@ -37,6 +51,7 @@ def day24(raw=None):
             goals[int(i[0])] = i.multi_index
         i.iternext()
 
+    # cf. day13, pathfinding utilities
     def pathfind(border):
         nonlocal d, visited
         newborder = []
@@ -57,26 +72,25 @@ def day24(raw=None):
 
         return around
 
+    # cf. aoc_2015_code/day9, populate a table with distances for each trip leg
     g = list(goals.keys())
     g.sort()
     distances = pd.DataFrame(columns=g, index=g)
 
-    # TODO is this overly nested? generate the pairwise indices directly?
-    for x in g:
-        for y in g:
-            if pd.isna(distances.loc[x, y]):
-                visited = set([goals[x]])
-                goal = goals[y]
-                d = 0
-                frontier = [goals[x]]
+    for (x, y) in itertools.combinations(g, 2):
+        if pd.isna(distances.loc[x, y]):
+            visited = set([goals[x]])
+            goal = goals[y]
+            d = 0
+            frontier = [goals[x]]
 
-                while not isinstance(frontier, int):
-                    frontier = pathfind(frontier)
+            while not isinstance(frontier, int):
+                frontier = pathfind(frontier)
 
-                distances.loc[x, y] = frontier
-                distances.loc[y, x] = frontier
+            distances.loc[x, y] = frontier
+            distances.loc[y, x] = frontier
 
-    # cf. aoc_2015_code/day9
+    # Starting from 0, find the total distance for each possible trip
     g.remove(0)
     x = itertools.permutations(g)
     trips = {}
@@ -91,17 +105,45 @@ def day24(raw=None):
         trips[itinerary] = d
         rounds[itinerary] = d + int(distances.loc[itinerary[-1], 0])
 
+    # Sort the results and return the shortest trip and roundtrip
     t = sorted(trips, key=lambda x: trips[x])
     r = sorted(rounds, key=lambda x: rounds[x])
 
     return {'part1': trips[t[0]], 'part2': rounds[r[0]]}
 
+# day23 - see day23.ipynb for details
+# Problem: given a set of assembly instructions, similar to those in day12, what value is left in register a for an input value of a = 7? a = 12?
+
+# Solution: This problem adds a 'tgl x' instruction that flips the instruction x away ('inc' -> 'dec', 'dec' -> 'inc', 'tgl' -> 'inc', 'cpy' -> 'jnz', 'jnz' -> 'cpy'). After implementing that and inspecting the register periodically for a range of input values, I noticed the instructions calculate factorial(a) + 85*76. This is quite slow & expensive for a = 12, since 'inc' is the only operation available, so a closed-form solution is preferable by far.
+
+# TODO translate all this assembly into the corresponding loops and operations
+
+# day22 - see day22.ipynb for details
+# Part 1: Given the disk space Used/Available for each node in a massive storage cluster, how many pairs of nodes exist in the grid, such that the current contents of node A could fit on node B if it were empty?
+
+# Solution: I parsed the input into a pandas DataFrame to facilitate further calculation. From there, it was straightforward (though slow) to count up each pair of nodes which met the stated criteria.
+
+# Part 2: You would like to transfer all the data from the top right node to the top left node. Unfortunately there's only 1 node currently empty, and some nodes are so large/full they're effectively unmoveable. What is the smallest number of transfers required to move the data?
+
+# Solution: This was simplest to solve by inspection; I printed the maze, with each node symbolized by a '.' for regular nodes, '*' for unmoveable nodes, and '_' for the empty node. Then I could easily count how many steps were needed to reach the top row and move the data from one end to the other.
+
 
 def day21(pw=None, commands=None):
+
+    # Part 1: Given an input string and a set of scrambling instructions, what is the resulting output?
+
     if not pw:
         pw = 'abcdefgh'
     if not commands:
         commands = input('day21.txt')
+
+    # Commands:
+    # 'swap position X with position Y' swaps the letters at indices X and Y
+    # 'swap letter X with letter Y'
+    # 'rotate left/right X steps'
+    # 'rotate based on position of letter X' means find the index of X, add 1, and if the result is > 4, add 1 again. Then rotate right that many steps.
+    # 'reverse positions X through Y' means reverse the substring from indices X to Y
+    # 'move position X to position Y' means remove the letter at index X and insert it at index Y
 
     def scramble(text):
         letters = list(text)
@@ -145,6 +187,10 @@ def day21(pw=None, commands=None):
 
         return ''.join(letters)
 
+    # Part 2: Given an output string that has already been scrambled, what was the input string?
+
+    # Solution: The simplest way to handle this was to scramble all the possible input strings and check which one gave the requested output.
+
     pws = itertools.permutations('abcdefgh')
     for p in pws:
         if scramble(p) == 'fbgdceah':
@@ -154,10 +200,17 @@ def day21(pw=None, commands=None):
 
 
 def day20(blocked=None):
+
+    # Problem: given a list of blacklisted IP ranges, written as 32-bit integers, what is the lowest-valued IP that is not blocked? How many IPs are allowed?
+
+    # Solution: Start by parsing the input into a sorted list of ranges.
+
     if not blocked:
         blocked = input('day20.txt')
     blocked = [list(map(int, x.split('-'))) for x in blocked]
     blocked.sort()
+
+    # Keep track of the lowest integer that's excluded from each range (greater than the end of the range). Append any IPs between that lowest IP and the bottom of the next range to the list of allowed IPs.
 
     lowest = blocked[0][1] + 1
     allowed = []
@@ -171,7 +224,12 @@ def day20(blocked=None):
 
 
 def day19(size=3001330):
-    # First I solved this problem by walking the list, which was prohibitively slow for large n
+
+    # Part 1: Imagine a circle of elves, numbered from 1, each holding a gift. Going around the circle in order, each elf steals a gift from the elf on their left. Any elf without a gift is removed from the circle. Which elf ends up with all the gifts?
+
+    # Part 2: Imagine instead that the elves steal gifts from the elf directly across the circle from them, or the elf on the left (from the stealer's view) if there are two options. Now which elf ends up with all the gifts?
+
+    # Solution: First I solved this problem by walking the list, which was prohibitively slow for large n
 
     # p1 = list(range(size))
     # while len(p1) > 1:
@@ -190,7 +248,7 @@ def day19(size=3001330):
     #             if r == p2[x - 2]:
     #                 break
 
-    # I tried speeding up execution with threading or multiprocessing, but concluded that the computation is CPU-bound and modifies a single massive data structure - I would have to chunk it manually. Looking for a pattern in the output, I derived a formula for both results (see day19.ipynb to visualize)
+    # I tried speeding up execution with threading or multiprocessing, but concluded that the computation is CPU-bound and modifies a single massive data structure - I would have to chunk it manually. Along the way, I ran the above code for n from 2 to 50. Noticing a pattern in the output, I derived a formula for both results (see day19.ipynb to visualize)
 
     # part1: 2^n = 1, then follow 2^n odd numbers (so the last is 2^n+1 - 1 : 2^n+1 - 1)
     def part1(x):
@@ -229,7 +287,7 @@ def day19(size=3001330):
 
 def day18(size, row=None):
 
-    # Problem: You face a room with 40 rows of tiles, some of which are safe (.) and some are traps (^). Given the layout of the first row, you can determine the layout of the next row by following the rules below.
+    # Problem: You face a room with many rows of tiles, some of which are safe (.) and some are traps (^). Given the layout of the first row, you can determine the layout of the next row by following the rules below. How many safe tiles are in a room with 40 rows? How many in a room with 400000 rows?
 
     # Rules:
     # For each tile, look at the tile in the prior row and the two adjacent to that tile. Call these tiles the left, center, and right tiles. A new tile is a trap if:
@@ -239,13 +297,13 @@ def day18(size, row=None):
     #   - Only the right tile is a trap.
     # The wall (end of each row) counts as safe; any tile that is not a trap per these rules is safe.
 
-    # Part 1: How many safe tiles are in this room?
     if not row:
         row = input('day18.txt')
 
     def traps(row):
         newrow = ''
         for x in range(len(row)):
+            # going down the row, check what's to the left and right of each char
             c = row[x]
             if x == 0:
                 l = '.'
@@ -257,6 +315,7 @@ def day18(size, row=None):
             else:
                 r = row[x + 1]
 
+            # traps happen when lcr = 110, 011, 100, or 001
             if (l == c == '^' and r == '.') or (c == r == '^' and l == '.') or (l == c == '.' and r == '^') or (c == r == '.' and l == '^'):
                 newrow += '^'
             else:
@@ -264,9 +323,12 @@ def day18(size, row=None):
 
         return newrow
 
+    # Build up the maze row by row
     maze = row
     for x in range(size - 1):
         maze.append(traps(maze[-1]))
+
+    # Then count the number of safe tiles
     count = 0
     for r in maze:
         count += r.count('.')
@@ -275,6 +337,25 @@ def day18(size, row=None):
 
 
 def day17(seed='yjjvjgan'):
+
+    # Problem: You are trapped in a 4x4 maze of rooms. At every step, the state of the doors in your current room are determined by the md5 hash of your puzzle input + your path so far (Up, Down, Left, Right). The first 4 characters of the hash correspond to the doors leading Up, Down, Left, and Right: open if the char is b-f, closed if a0-9. The walls of the maze have no doors, of course.
+
+    #########
+    #S| | | #
+    #-#-#-#-#
+    # | | | #
+    #-#-#-#-#
+    # | | | #
+    #-#-#-#-#
+    # | | |E#
+    #########
+
+    # Part 1: What is the shortest path from the top left to the bottom right?
+
+    # Part 2: What is the length of the longest path that reaches the bottom right? Recall that once a path reaches the goal, all the doors open and the path ends.
+
+    # Solution: Starting at [0, 0], accumulate a list of paths and their ending locations. If they reach the goal or deadend (all doors closed), add them to the appropriate list. Otherwise, keep stepping.
+
     path = ''
     location = [0, 0]
     pathlist = [[path, location]]
@@ -282,16 +363,8 @@ def day17(seed='yjjvjgan'):
     deadends = []
 
     # TODO review vs. day13, day24
-    def pathfind(paths):
-        newpaths = []
-        for p in paths:
-            if p[1] == [3, 3]:
-                results.append(p[0])
-            else:
-                newpaths.extend(nextstep(p))
 
-        return newpaths
-
+    # This does the bulk of the work: hashing, determining which doors are open/closed, checking for walls, and adding the path to deadends if no doors are open.
     def doorfind(steps):
         path, location = steps
         m = hashlib.md5()
@@ -313,6 +386,8 @@ def day17(seed='yjjvjgan'):
 
         return o
 
+    # Given a [path, location], return the updated [path, location] for each open door
+    # Note that if the path is a deadend, it returns []
     def nextstep(steps):
         path, location = steps
         options = []
@@ -334,24 +409,38 @@ def day17(seed='yjjvjgan'):
 
         return options
 
+    # This adds paths to results if they reach the goal [3, 3], and otherwise accumulates possible next steps. Any deadend path contributes nothing to newpaths.
+    def pathfind(paths):
+        newpaths = []
+        for p in paths:
+            if p[1] == [3, 3]:
+                results.append(p[0])
+            else:
+                newpaths.extend(nextstep(p))
+
+        return newpaths
+
+    # Loop until all paths have either reached the goal or deadended.
     while len(pathlist) > 0:
         pathlist = pathfind(pathlist)
 
+    # Since the search is breadth-first, the last result is the longest.
     return {"part1": results[0], "part2": len(results[-1])}
 
 
-def day16(disk: int, seed: Optional[str] = None):
+def day16(disk, seed=None):
 
     if not seed:
         seed = '11100010111110100'
 
-    # Problem: you need to generate random data to fill a disk and calculate its checksum. Given an initial seed value, you generate data this way:
+    # Problem: you need to generate random data to fill a disk and calculate its checksum. Given an initial seed value, what is the checksum for a disk of size 272? What is the checksum for a disk of size 35651584?
 
-    # Call the data you have at this point "a".
-    # Make a copy of "a"; call this copy "b".
-    # Reverse the order of the characters in "b".
-    # In "b", replace all instances of 0 with 1 and all 1s with 0.
-    # The resulting data is "a", then a single 0, then "b".
+    # First, generate data this way:
+    # - Call the data you have at this point "a".
+    # - Make a copy of "a"; call this copy "b".
+    # - Reverse the order of the characters in "b".
+    # - In "b", replace all instances of 0 with 1 and all 1s with 0.
+    # - The resulting data is "a", then a single 0, then "b".
 
     def datagen(a):
         b = a[::-1]
@@ -363,12 +452,11 @@ def day16(disk: int, seed: Optional[str] = None):
         seed = datagen(seed)
     seed = seed[0:disk]
 
-    # Once you have enough, calculate the checksum this way:
-
-    # Break the data into pairs.
-    # If the pair is two identical digits (11 or 00), the checksum digit is 1. If not (01 or 10), it's 0.
-    # The result should be half the length of the initial data. If the length of the checksum is even, calculate its checksum.
-    # Repeat until you have a checksum with an odd length.
+    # Next, calculate the checksum this way:
+    # - Break the data into pairs.
+    # - If the pair is two identical digits (11 or 00), the checksum digit is 1. If not (01 or 10), it's 0.
+    # - The result should be half the length of the initial data. If the length of the checksum is even, calculate its checksum.
+    # - Repeat until you have a checksum with an odd length.
 
     def checksum(a):
         pairs = [a[x] + a[x + 1] for x in range(0, len(a), 2)]
@@ -421,12 +509,14 @@ def day14(salt='zpqevtbw'):
 
     # Problem: You are looking for 64 one-time pad keys. To find each key, determine the md5 hash of your input salt with an index that starts at 0 and increases each time. A key is valid if the lowercase hexadecimal representation of the md5 result contains 3 characters in a row AND a hash containing the same characters 5 times in a row occurs in the next 1000 hashes.
 
+    # Part 1: What index produces your 64th key?
     def gen_hash(y):
         m = hashlib.md5()
         m.update(y.encode())
 
         return m.hexdigest().lower()
 
+    # Part 2: instead of simply hashing once, hash 2016 additional times! Now what index produces your 64th key?
     def stretch_hash(y):
         for i in range(2017):
             m = hashlib.md5()
@@ -435,18 +525,22 @@ def day14(salt='zpqevtbw'):
 
         return m.hexdigest().lower()
 
+    # Since part 2 uses a different hash fn, pass that as a parameter
     def find_keys(hashfn):
         keys = {}
         hashes = {}
+        index = 0
+        # quints and triples are dicts of dicts, with a key for each hex char
         quints = {k: {} for k in '0123456789abcdef'}
         triples = {k: {} for k in '0123456789abcdef'}
-        index = 0
 
+        # Starting from index 0, search in chunks of 5000
         while len(keys) < 64:
             for x in range(index, index + 5000):
                 y = salt + str(x)
                 hashes[x] = hashfn(y)
 
+            # If a hash contains 3 or 5 of any char, store it in the appropriate subdict with index n as the key, with the char as the top-level key
             for n in hashes:
                 t = re.search(r'([a-f0-9])\1\1', hashes[n])
                 if t:
@@ -456,6 +550,7 @@ def day14(salt='zpqevtbw'):
                 if q:
                     quints[q.group()[0]][n] = hashes[n]
 
+            # For each index in triples[k], check for any index in quints[k] in the next 1000 ints
             for k in quints:
                 qvals = quints[k]
                 tvals = triples[k]
@@ -475,12 +570,14 @@ def day13(goal=(39, 31), seed=1350):
 
     # Part 1: Given a map of a space defined by the function below, what is the shortest path from (1,1) to (31, 39)? You may not move diagonally.
 
+    # Part 2: How many locations (including (1, 1)) can you reach in 50 steps?
+
     # Generating fn:
-    # Find x*x + 3*x + 2*x*y + y + y*y.
-    # Add your puzzle input.
-    # Find the binary representation of that sum; count the number of bits that are 1.
-    # If the number of bits that are 1 is even, it's an open space.
-    # If the number of bits that are 1 is odd, it's a wall.
+    # - Find x*x + 3*x + 2*x*y + y + y*y.
+    # - Add your puzzle input.
+    # - Find the binary representation of that sum; count the number of bits that are 1.
+    # - If the number of bits that are 1 is even, it's an open space.
+    # - If the number of bits that are 1 is odd, it's a wall.
 
     def g(q):
         def f(x, y):
@@ -488,22 +585,26 @@ def day13(goal=(39, 31), seed=1350):
             return v.count('1') % 2
         return f
 
-    # since numpy arrays are indexed as (row, column), goal must be given as (y, x)
+    h = g(seed)
+    maze = np.array([[h(x, y) for x in range(60)] for y in range(60)])
+
+    # Solution: Keep a list of the farthest locations you can reach in d steps, and a list of locations you've already visited.
+
+    # Note: since numpy arrays are indexed as (row, column), goal must be given as (y, x)
     frontier = [(1, 1)]
     visited = set(frontier)
     points = 0
     d = 0
 
-    h = g(seed)
-    maze = np.array([[h(x, y) for x in range(60)] for y in range(60)])
-
     # TODO this is nearly identical to day24, refactor?
     def pathfind(border):
         nonlocal d, visited, points
 
+        # Part 2: how many points can you reach in 50 steps?
         if d == 50:
             points = len(visited)
 
+        # For each current location, return the number of steps d if you've reached the goal; otherwise, accumulate a list of possible next steps
         newborder = []
         for p in border:
             if p == goal:
@@ -511,10 +612,12 @@ def day13(goal=(39, 31), seed=1350):
             else:
                 newborder.extend(nextstep(p))
 
+        # Increment the number of steps d, add any new locations you've reached to visited, and deduplicate the next steps in newborder
         d += 1
         visited = visited | set(newborder)
         return list(set(newborder))
 
+    # Given a point, return the adjacent points that are open (0), not a wall (-1) and haven't already been visited
     def nextstep(point):
         x, y = point
         around = [a for a in [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
@@ -581,42 +684,38 @@ def day12(commands=None):
 
 
 def day11(floors=None):
+
+    # Problem: You are located on the 1st floor of a building containing various microchips and generators. How many moves will it take to transport all the chips and generators to the 4th floor, without frying any of the microchips?
+
     # Rules:
-    # 1. You and the elevator begin on F0.
-    # 2. At all times, each floor (+ elevator) can only contain all generators, all microchips, nothing, or a combination such that all microchips are with their generators. (A generator may hang out without its microchip.)
-    # 3. The elevator only moves one floor at a time.
-    # 4. The elevator will only move at least one and no more than two generators or microchips.
-    # 5. The goal is to get all microchips and generators (10) to F3.
+    # - At all times, each floor can only contain all generators, all microchips, nothing, or a combination such that all microchips are with their corresponding generators. A generator may hang out without its microchip.
+    # - The elevator only moves one floor at a time.
+    # - The elevator will only move at least one and no more than two generators or microchips.
 
-    # Strategy
-    # keep a list of possible states after m moves, and a count of m
-    # loop through those states to find the next states and increment m
-    # write a fn to check for valid states
-    # write a fn to generate all possible next states
-    # track already visited states to avoid revisiting them
-
-    # represent state as a list containing the elevator location and a list for each floor of the building.
-    # elements: thulium (T), plutonium (U), strontium (S), promethium (P), ruthenium (R), elerium (E), dilithium (D)
-    # F4:
-    # F3: PG, PM, RG, RM
-    # F2: UM, SM
-    # F1: TG, TM, UG, SG, (EM, EG, DM, DG)
-
+    # Solution: represent state as a list containing an int for the elevator location and a list for each floor of the building.
     # for best results, sort the initial state
+
+    # F3:
+    # F2: PG, PM, RG, RM
+    # F1: UM, SM
+    # F0: TG, TM, UG, SG, (EM, EG, DM, DG)
+
+    # Part 1 elements: elements: thulium (T), plutonium (U), strontium (S), promethium (P), ruthenium (R)
     p1 = [[0,
            ["SG", "TG", "TM", "UG"],
            ["SM", "UM"],
            ["PG", "PM", "RG", "RM"],
            []]]
+
+    # Part 2 elements: as above, plus elerium (E), dilithium (D) on floor 0
     p2 = [[0,
            ["DG", "DM", "EG", "EM", "SG", "TG", "TM", "UG"],
            ["SM", "UM"],
            ["PG", "PM", "RG", "RM"],
            []]]
-    moves = 0
-    visited = {str(floors[0])}
-    total = len([i for s in floors[0][1:] for i in s])
 
+    # Given a list of 4 floors, confirm that it follows the rules for chips and generators
+    # TODO this could be more efficient, I think (or is the slowdown elsewhere?)
     def validate(state):
         checks = []
         for floor in state:
@@ -631,6 +730,7 @@ def day11(floors=None):
 
         return False not in checks
 
+    # Given a floor, return a list of lists containing its contents taken 1 or 2 at a time
     def taketwo(x):
         y = list(map(list, itertools.combinations(x, 2)))
         for i in x:
@@ -638,6 +738,7 @@ def day11(floors=None):
 
         return y
 
+    # Given a list of 4 floors and a list of items to move from start to end, return the updated list of floors (sorted, so states can be compared)
     def move(state, item, start, end):
         y = copy.deepcopy(state)
         for x in item:
@@ -649,6 +750,7 @@ def day11(floors=None):
 
         return y
 
+    # To find possible next moves, try moving every 1 or 2 items on the current floor to the floor directly above or below. If the result is a valid state, add it to the list
     def nextmoves(s):
         elevator = s[0]
         floors = s[1:]
@@ -699,81 +801,14 @@ def day11(floors=None):
         return solve(floors)
 
 
-def river():
-    # represent state as a list with 2 elements, representing each side of the river. Items: Boat, Chicken, Fox, Wheat (alphabetical)
-    state = [[["B", "C", "F", "W"], [""]]]
-    moves = 0
-    paths = {str(state): moves}
-
-    # next moves: from the side containing B, can take 0 or 1 item to the other side
-    # invalid moves: anything that leaves the C with the W, or the F with the C
-
-    def nextmoves(s):
-        # takes a state s, and returns a list of states m
-        m = []
-        for each in s:
-            if "B" in each:
-                origin = s.index(each)
-                destination = origin - 1
-                # first, just move the boat without anything in it
-                x = copy.deepcopy(s)
-                x[origin].remove("B")
-                x[origin].sort()
-                x[destination].append("B")
-                x[destination].sort()
-                m.append(x)
-
-                # next, move each item on the boat's original side to the other side
-                # note: you already moved the boat, so you don't have to do it again
-                for i in x[origin]:
-                    y = copy.deepcopy(x)
-                    y[origin].remove(i)
-                    y[origin].sort()
-                    y[destination].append(i)
-                    y[destination].sort()
-                    m.append(y)
-        return m
-
-    def isvalid(s):
-        # takes a state s, returns whether it is a permissible state or not
-        for each in s:
-            if ("B" not in each) and ("C" in each) and (("W" in each) or ("F" in each)):
-                return False
-            else:
-                return True
-
-    # given a list of states s, generate all the possible next moves
-    # if each next move is valid and it's not already in the path dict, add it along with the # of moves
-    # repeat using the items of the path dict with value moves + 1
-
-    # keep a list version of the state in s (pass it in as a parameter?) and put a string version into paths
-
-    def iterstate(ss, p, m):
-        while True:
-            ts = []
-            m += 1
-            if ss == []:
-                return p
-            for x in ss:
-                for y in nextmoves(x):
-                    if y == [[""], ["B", "C", "F", "W"]]:
-                        return y, m
-                    if isvalid(y) and (str(y) not in p):
-                        ts.append(y)
-                        p[str(y)] = m
-            ss = ts
-
-    return iterstate(state, paths, moves)
-
-
 def day10(commands=None):
 
     if not commands:
         commands = input('day10.txt')
 
-    # Part 1: You have instructions for a system of numbered bots that take in numbers, compare them, and deposit them into output bins. Bots don't take any action until they have two numbers to compare. Which bot compares 61 to 17?
+    # Problem: You have instructions for a system of numbered bots that take in numbers, compare them, and deposit them into output bins. Bots don't take any action until they have two numbers to compare.
 
-    # For each command, I need to parse whether it's an input value or a bot output. How should I represent bots and output bins? Will it work to parse out all the input values and then run all the bot outputs? Or do I have to run through the list (recursively?) checking for bots that have 2 values and activating them?
+    # Solution: start by parsing the commands and populating a dict of bots, represented as dicts with fields for two values and the destination bins for each value; also a dict for each output bin, intially all set False
 
     def botnames():
         for c in commands:
@@ -793,17 +828,24 @@ def day10(commands=None):
                 bots[(x[10] + x[11])] = {'value': False}
 
     def botvals():
+
+        # Parse commands that assign values to various bots and bins
+
         for c in commands:
             x = c.split()
 
-            # populate each bot with its initial values
             if x[0] == 'value':
                 deposit(bots[(x[4] + x[5])], int(x[1]))
 
-    # Given a bot or bin, deposit the number in one of the bot's slots or the bin.
     def deposit(bot, x):
+
+        # Given a bot or bin, deposit the value in one of the bot's slots or the bin.
+
+        # bins: just dump the value in
         if 'value' in bot:
             bot['value'] = x
+
+        # bots: use the low slot if it's free, otherwise put the high and low values in the correct spots
         if 'low' in bot:
             if not bot['low']:
                 bot['low'] = x
@@ -813,8 +855,10 @@ def day10(commands=None):
                 bot['high'] = bot['low']
                 bot['low'] = x
 
-    # If a bot has both values, compare & send them to lowdest and highdest and reset them to False (?)
     def botrun():
+
+        # If a bot has both values, send them to lowdest and highdest and reset them to False
+
         for b in bots.values():
             if ('low' in b) and b['low'] and b['high']:
                 deposit(bots[b['lowdest']], b['low'])
@@ -822,14 +866,17 @@ def day10(commands=None):
                 b['low'] = False
                 b['high'] = False
 
-    # 250 runs turns out to be sufficient to reach steady state.
+    # 250 runs turns out to be sufficient to reach steady state. Since botvals may have changed after botrun, keep it in the loop
     bots = {}
     botnames()
     for i in range(250):
         botvals()
         botrun()
 
+    # Part 1: Which bot compares 61 to 17?
+
     bots_final = [x for x in iter(bots) if x.startswith('bot')]
+
     for x in bots_final:
         p1 = 0
         if bots[x]['low'] == 17 and bots[x]['high'] == 61:
@@ -844,9 +891,10 @@ def day10(commands=None):
 
 
 def day9_part2(data=None):
+
     # Part 2: Turns out you need to expand markers within inserted text after all. What is the decompressed length of your file?
 
-    # Switch from recursion to iteration.
+    # Solution: Switch from recursion to iteration.
     # TODO Can this be optimized?? Am I storing the expanded string or just its length? Can I batch process this somehow? or parallelize?
     # TODO timeit to confirm that this is RAM limited?
 
@@ -873,13 +921,15 @@ def day9_part2(data=None):
 
     if not data:
         data = input('day9.txt')
+
     return expand(data[0], 0)
 
 
 def day9_part1(data=None):
+
     # Part 1: You need to decompress a data file. Compression markers are contained in parentheses. (10x2) means to take the next 10 characters and insert them 2 times, then continue reading forward. Ignore whitespace and do not include the marker itself in the decompressed text to insert. However, parentheses and other special characters may appear in inserted text without denoting a compression marker. What is the length of your decompressed file?
 
-    # Start at the beginning of the string. Find the first '('. Partition at the first ')'after that. Extract the rlen and rx from [0], and slice out s = [2][0:rlen]. Build up decompressed by adding rx*s. Recurse? on the string after the slice.
+    # Solution: Start at the beginning of the string. Find the first '('. Partition at the first ')'after that. Extract the rlen and rx from [0], and slice out s = [2][0:rlen]. Build up decompressed by adding rx*s. Recurse? on the string after the slice.
 
     def expand(s, d):
         if s.startswith('('):
@@ -900,6 +950,7 @@ def day9_part1(data=None):
 
     if not data:
         data = input('day9.txt')
+
     return expand(data[0], 0)
 
 
@@ -908,15 +959,12 @@ def day8(ops=None):
     # Part 1: You are given a set of commands to execute on a screen 50 px wide by 6 px tall, which starts entirely off. How many pixels turn on?
 
     # Commands:
-
-    # 'rect AxB' turns on all of the pixels in a rectangle A px wide by B px tall at the top-left of the screen.
-
-    # 'rotate row y=A by B' shifts all of the pixels in row A (0 is the top row) right by B px. Pixels that would fall off the right end appear at the left end of the row.
-
-    # 'rotate column x=A by B' shifts all of the pixels in column A (0 is the left column) down by B px. Pixels that would fall off the bottom appear at the top of the column.
+    # - 'rect AxB' turns on all of the pixels in a rectangle A px wide by B px tall at the top-left of the screen.
+    # - 'rotate row y=A by B' shifts all of the pixels in row A (0 is the top row) right by B px. Pixels that would fall off the right end appear at the left end of the row.
+    # - 'rotate column x=A by B' shifts all of the pixels in column A (0 is the left column) down by B px. Pixels that would fall off the bottom appear at the top of the column.
 
     # numpy handles arrays well, let's use it here
-    # numpy arrays index as (# of rows, # of cols)
+    # numpy indexes arrays as (# of rows, # of cols)
     screen = np.zeros((6, 50), dtype=int)
 
     # Given the dimensions of the rectangle as a string 'AxB', turn on those pixels
@@ -934,6 +982,7 @@ def day8(ops=None):
 
     if not ops:
         ops = input('day8.txt')
+
     for each in ops:
         r = each.split()
         if r[0] == "rect":
@@ -950,24 +999,33 @@ def day8(ops=None):
     return np.sum(screen)
 
 
-def day7_part2(ips=None):
-    # Part 2: Strings are valid if they contain a 3 character palindrome (e.g. aba, sms) outside square brackets AND the corresponding inverse (e.g. sms -> msm) inside square brackets.
+def day7_xyx(s):
 
     # Given a string, test each set of 3 consecutive characters for palindromes
     # Return a list for further testing
-    def xyx(s):
-        trigrams = [s[i - 1:i + 1] for i in range(1, len(s) - 1) if (s[i - 1] == s[i + 1] and s[i] != s[i - 1])]
-        return trigrams
+
+    trigrams = [s[i - 1:i + 1] for i in range(1, len(s) - 1) if (s[i - 1] == s[i + 1] and s[i] != s[i - 1])]
+
+    return trigrams
+
+
+def day7_matches(a, b):
 
     # Given two lists of strings, check each item of a for matchng any item in b
     # NOTE: this checks the reverse of x against y; maybe rename this or reverse before passing into the fn? or when generating trigrams?
 
-    def matches(a, b):
-        return True in [True for x in a for y in b if x[::-1] == y]
+    return True in [True for x in a for y in b if x[::-1] == y]
 
-    count = 0
+
+def day7_part2(ips=None):
+
+    # Part 2: Strings are valid if they contain a 3 character palindrome (e.g. aba, sms) outside square brackets AND the corresponding inverse (e.g. sms -> msm) inside square brackets.
+
     if not ips:
         ips = input('day7.txt')
+
+    count = 0
+
     for i in ips:
         outbs = []
         inbs = []
@@ -978,31 +1036,38 @@ def day7_part2(ips=None):
             if '[' in y:
                 z = y.partition('[')
                 # Collect valid trigrams found outside square brackets
-                outbs.extend(xyx(z[0]))
+                outbs.extend(day7_xyx(z[0]))
                 # Ditto, inside square brackets
-                inbs.extend(xyx(z[2]))
+                inbs.extend(day7_xyx(z[2]))
             # what to do if '[' isn't found (last segment)
             else:
-                outbs.extend(xyx(y))
+                outbs.extend(day7_xyx(y))
 
-        if matches(outbs, inbs):
+        if day7_matches(outbs, inbs):
             count += 1
 
     return count
 
 
-def day7_part1(ips=None):
-    # Part 1: Strings are valid if they contain a 4 character palindrome (e.g. abba, smms), unless the palindrome is inside square brackets or the characters are all the same (e.g. nnnn). How many of the given strings are valid?
+def day7_abba(s):
 
     # Given a string, test each set of 4 consecutive characters for palindromes
     # Return True if any 4 are valid, otherwise False
-    def abba(s):
-        tf = [(s[i] == s[i + 1]) and (s[i - 1] == s[i + 2]) and (s[i] != s[i - 1]) for i in range(1, len(s) - 2)]
-        return True in tf
 
-    count = 0
+    tf = [(s[i] == s[i + 1]) and (s[i - 1] == s[i + 2]) and (s[i] != s[i - 1]) for i in range(1, len(s) - 2)]
+
+    return True in tf
+
+
+def day7_part1(ips=None):
+
+    # Part 1: Strings are valid if they contain a 4 character palindrome (e.g. abba, smms), unless the palindrome is inside square brackets or the characters are all the same (e.g. nnnn). How many of the given strings are valid?
+
     if not ips:
         ips = input('day7.txt')
+
+    count = 0
+
     for i in ips:
         outbs = []
         inbs = []
@@ -1012,12 +1077,12 @@ def day7_part1(ips=None):
         for y in x:
             if '[' in y:
                 z = y.partition('[')
-                if abba(z[0]):
+                if day7_abba(z[0]):
                     outbs.append(True)
-                if abba(z[2]):
+                if day7_abba(z[2]):
                     inbs.append(True)
             # Check the last segment too
-            elif abba(y):
+            elif day7_abba(y):
                 outbs.append(True)
 
         if True in outbs and True not in inbs:
@@ -1028,10 +1093,11 @@ def day7_part1(ips=None):
 
 def day6(messages=None):
 
-    # Problem: Given a list of strings, find the most common character in each column.
+    # Problem: Given a list of strings, find the most common and the least common character in each column.
 
     if not messages:
         messages = input('day6.txt')
+
     hwords = [y for x in messages for y in x.split()]
     # Reformat from rows to columns
     vwords = zip(*hwords)
@@ -1047,7 +1113,7 @@ def day6(messages=None):
     return final
 
 
-def day5_part2(doorid: str = 'abbhdwsy') -> str:
+def day5_part2(doorid='abbhdwsy'):
 
     # Problem: You are looking for an 8 character password. To find each character, determine the md5 hash of your input with an index that starts at 0 and increases each time. If the hexadecimal representation of the md5 result begins with 5 zeroes, the 7th digit is added to the password in the position given by the 6th digit. Only the first character found for each position is used, discard the rest.
 
@@ -1067,7 +1133,7 @@ def day5_part2(doorid: str = 'abbhdwsy') -> str:
     return ''.join(password)
 
 
-def day5_part1(doorid: str = 'abbhdwsy') -> str:
+def day5_part1(doorid='abbhdwsy'):
 
     # Problem: You are looking for an 8 character password. To find each character, determine the md5 hash of your input with an index that starts at 0 and increases each time. If the hexadecimal representation of the md5 result begins with 5 zeroes, the 6th digit is appended to the password.
 
@@ -1085,19 +1151,20 @@ def day5_part1(doorid: str = 'abbhdwsy') -> str:
     return password
 
 
-def day4(rooms: Optional[List[str]] = None) -> Dict[str, int]:
+def day4(rooms=None):
 
     # Part 1: You are given a list of rooms formatted as a name (lowercase letters separated by dashes) followed by a dash, a sector ID, and a checksum in square brackets. A room name is valid if the checksum is the five most common letters in the encrypted name, in order, with ties broken by alphabetization. What is the sum of the sector IDs for all the valid rooms?
 
     if not rooms:
         rooms = input('day4.txt')
-    # Start with each room name in a list of strings
-    r = [y for x in rooms for y in x.split()]
 
+    # Start by parsing out each room name
+    r = [y for x in rooms for y in x.split()]
     idsum = 0
     p2 = 0
+
     for x in r:
-        # Split each name into the [checksum], the sector ID, and the name, stripping out dashes
+        # Split each room into the [checksum], the sector ID, and the name, stripping out dashes
         parts = x.partition('[')
         checksum = parts[2].strip(']')
         rest = parts[0].rsplit('-', 1)
@@ -1132,6 +1199,8 @@ def day4(rooms: Optional[List[str]] = None) -> Dict[str, int]:
                     ptext.append(' ')
 
             realname = ''.join(ptext)
+
+            # Part 2: in which room is the north pole?
             if 'north' in realname:
                 p2 = int(sectorid)
             else:
@@ -1141,23 +1210,30 @@ def day4(rooms: Optional[List[str]] = None) -> Dict[str, int]:
 
 
 def day3_check(triplet: List[int]) -> bool:
+
+    # A helper function to check if a list of 3 integers makes a closed triangle.
+
     c = max(triplet)
     triplet.remove(c)
     a, b = triplet
+
     if a + b > c:
         return True
     else:
         return False
 
 
-def day3(triangles=None) -> Dict[str, int]:
+def day3(triangles=None):
 
-    # Problem: given a list of numbers, separate them into groups of 3. How many of these groups could be the sides of a triangle (a + b > c)?
     if not triangles:
         triangles = input('day3.txt')
+
+    # Problem: given a list of numbers, separate them into groups of 3. How many of these groups could be the sides of a triangle (a + b > c)?
+
     htri: List[List[int]] = [list(map(int, x.split())) for x in triangles]
 
-    # Part 2: Separate the numbers into groups of 3 down columns, not across rows, then check for triangles
+    # Part 2: Separate the numbers into groups by going down columns, not across rows, then check for triangles
+
     i = range(0, len(htri), 3)
     vtri: List[List[int]] = [list(y) for x in i for y in zip(htri[x], htri[x + 1], htri[x + 2])]
 
@@ -1168,9 +1244,52 @@ def day3(triangles=None) -> Dict[str, int]:
     return {'part1': p1, 'part2': p2}
 
 
-def day2_part2(keys=None):
+def day2_solve(keys, keypad, location):
+    keycode = ''
 
-    # Problem: Starting from the 5 of a 13-digit keypad, follow the given directions (Up, Down, Left, Right) to find each digit of a passcode. Skip any direction that leads off the edge of the keypad.
+    for k in keys:
+        for direction in k:
+            next = copy.deepcopy(location)
+            if direction == "U":
+                next[1] += 1
+            if direction == "D":
+                next[1] -= 1
+            if direction == "R":
+                next[0] += 1
+            if direction == "L":
+                next[0] -= 1
+
+            # Only make a move if it's an existing key!
+            if str(next) in keypad:
+                location = copy.deepcopy(next)
+
+        # After each set of directions has been processed, add the current key to the keycode
+        keycode += keypad[str(location)]
+
+    return keycode
+
+
+def day2(keys=None):
+
+    if not keys:
+        keys = input('day2.txt')
+
+    # Part 1: Starting from key 5 of a 9-digit keypad, follow the given directions (Up, Down, Left, Right) to find each digit of a passcode. Skip any direction that leads off the edge of the keypad.
+
+    # Keypad
+    # 1 2 3
+    # 4 5 6
+    # 7 8 9
+
+    # Solution: Consider the keypad as a coordinate grid, and start at key 5
+    keypad_p1 = {'[-1, 1]': '1', '[0, 1]': '2', '[1, 1]': '3',
+                 '[-1, 0]': '4', '[0, 0]': '5', '[1, 0]': '6',
+                 '[-1, -1]': '7', '[0, -1]': '8', '[1, -1]': '9'
+                 }
+
+    origin_p1 = [0, 0]
+
+    # Part 2: Solve as before, on a 13-digit keypad, starting at key 5 (coordinates (-2, 0)).
 
     # Keypad
     #        1
@@ -1179,120 +1298,42 @@ def day2_part2(keys=None):
     #    A   B   C
     #        D
 
-    if not keys:
-        keys = input('day2.txt')
+    keypad_p2 = {'[0, 2]': '1',
+                 '[-1, 1]': '2', '[0, 1]': '3', '[1, 1]': '4',
+                 '[-2, 0]': '5', '[-1, 0]': '6', '[0, 0]': '7', '[1, 0]': '8', '[2, 0]': '9',
+                 '[-1, -1]': 'A', '[0, -1]': 'B', '[1, -1]': 'C',
+                 '[0, -2]': 'D'
+                 }
 
-    # Consider the keypad as a coordinate grid, and start at key 5
-    keypad = {'[0, 2]': '1',
-              '[-1, 1]': '2', '[0, 1]': '3', '[1, 1]': '4',
-              '[-2, 0]': '5', '[-1, 0]': '6', '[0, 0]': '7', '[1, 0]': '8', '[2, 0]': '9',
-              '[-1, -1]': 'A', '[0, -1]': 'B', '[1, -1]': 'C',
-              '[0, -2]': 'D'
-              }
-    coordinates = [-2, 0]
+    origin_p2 = [-2, 0]
 
-    # Two cases to handle movement on the interior and the edges. I'm pretty sure there's a more elegant way to do this.
-    keycode = ''
-    for each in keys:
-        for direction in each:
-            s = abs(coordinates[0]) + abs(coordinates[1])
-            if s < 2:
-                if direction == "U":
-                    coordinates[1] += 1
-                if direction == "D":
-                    coordinates[1] -= 1
-                if direction == "R":
-                    coordinates[0] += 1
-                if direction == "L":
-                    coordinates[0] -= 1
-            if s == 2:
-                if direction == "U" and coordinates[1] in [-1, -2]:
-                    coordinates[1] += 1
-                if direction == "D" and coordinates[1] in [1, 2]:
-                    coordinates[1] -= 1
-                if direction == "R" and coordinates[0] in [-1, -2]:
-                    coordinates[0] += 1
-                if direction == "L" and coordinates[0] in [1, 2]:
-                    coordinates[0] -= 1
-        keycode += keypad[str(coordinates)]
-
-    return keycode
+    return {'part1': day2_solve(keys, keypad_p1, origin_p1), 'part2': day2_solve(keys, keypad_p2, origin_p2)}
 
 
-def day2_part1(keys=None):
-
-    # Problem: Starting from the 5 of a 9-digit keypad, follow the given directions (Up, Down, Left, Right) to find each digit of a passcode. Skip any direction that leads off the edge of the keypad.
-
-    # Keypad
-    # 1 2 3
-    # 4 5 6
-    # 7 8 9
-
-    if not keys:
-        keys = input('day2.txt')
-
-    # Consider the keypad as a coordinate grid, and start at key 5
-    keypad = {
-        '[-1, 1]': '1', '[0, 1]': '2', '[1, 1]': '3',
-        '[-1, 0]': '4', '[0, 0]': '5', '[1, 0]': '6',
-        '[-1, -1]': '7', '[0, -1]': '8', '[1, -1]': '9'
-    }
-    coordinates = [0, 0]
-
-    # Two cases to handle movement on the interior and the edges. I'm pretty sure there's a more elegant way to do this.
-    keycode = ''
-    for each in keys:
-        for direction in each:
-            if direction == "U":
-                if coordinates[1] == 1:
-                    pass
-                else:
-                    coordinates[1] += 1
-            if direction == "D":
-                if coordinates[1] == -1:
-                    pass
-                else:
-                    coordinates[1] -= 1
-            if direction == "R":
-                if coordinates[0] == 1:
-                    pass
-                else:
-                    coordinates[0] += 1
-            if direction == "L":
-                if coordinates[0] == -1:
-                    pass
-                else:
-                    coordinates[0] -= 1
-        keycode += keypad[str(coordinates)]
-
-    return keycode
-
-
-def day1(path: Optional[str] = None) -> Dict[str, int]:
+def day1(path=None):
     # Part 1: You are given a series of directions indicating a direction to turn and a number of blocks of travel on a grid. How many blocks away from the origin do you end up? Count total blocks as x + y, not as the crow flies.
 
     if not path:
         path = input('day1.txt')
     path: List[str] = path[0].split(', ')
 
-    # Start at the origin facing direction North = 0.
-    # var coordinates holds a list of points visited.
+    # Start at the origin facing direction North = 0 and keep a list of points visited.
     facing: int = 0
     coordinates: List[List[int]] = [[0, 0]]
 
-    # Processing each direction
+    # Starting at the last known coordinate, break the direction into a turn and a distance, and update the location accordingly
     for step in path:
-        # start at the last known coordinate
         nextstep: List[int] = coordinates[-1][:]
-        # break the direction into a turn and a distance
         turn: str = step[0]
         steps: int = int(step[1:])
+
         if turn == "R":
             facing += 1
         else:
             facing -= 1
 
         d: int = facing % 4
+
         while steps > 0:
             if d == 0:
                 nextstep[1] += 1
@@ -1302,14 +1343,18 @@ def day1(path: Optional[str] = None) -> Dict[str, int]:
                 nextstep[1] -= 1
             if d == 3:
                 nextstep[0] -= 1
+
             coordinates.append(nextstep[:])
             steps -= 1
 
+    results = {'final': sum(map(abs, coordinates[-1]))}
+
     # Part 2: How many blocks away is the first location you visit twice?
+
+    # Solution: Check your handy list for points that appear more than once
     doubles: List[List[int]] = list(filter(lambda point: coordinates.count(point) >= 2, coordinates))
 
-    results = {}
-    results['final'] = sum(map(abs, coordinates[-1]))
     if len(doubles) > 0:
         results['HQ'] = sum(map(abs, doubles[0]))
+
     return results
