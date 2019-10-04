@@ -118,20 +118,18 @@ def test_day10():
 
 
 def test_day9():
-    assert day9_part1(['ADVENT']) == 6
-    assert day9_part1(['A(1x5)BC']) == 7
-    assert day9_part1(['(3x3)XYZ']) == 9
-    assert day9_part1(['A(2x2)BCD(2x2)EFG']) == 11
-    assert day9_part1(['(6x1)(1x3)A']) == 6
-    assert day9_part1(['X(8x2)(3x3)ABCY']) == 18
-    assert day9_part1() == 150914
+    assert day9(['ADVENT'])['part1'] == 6
+    assert day9(['A(1x5)BC'])['part1'] == 7
+    assert day9(['A(2x2)BCD(2x2)EFG'])['part1'] == 11
+    assert day9(['(6x1)(1x3)A'])['part1'] == 6
 
-    assert day9_part2(['(3x3)XYZ']) == 9
-    assert day9_part2(['X(8x2)(3x3)ABCY']) == 20
-    assert day9_part2(['(27x12)(20x12)(13x14)(7x10)(1x12)A']) == 241920
-    assert day9_part2(['(25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN']) == 445
+    assert day9(['(27x12)(20x12)(13x14)(7x10)(1x12)A'])['part2'] == 241920
+    assert day9(['(25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN'])['part2'] == 445
+
+    assert day9(['(3x3)XYZ']) == {'part1': 9, 'part2': 9}
+    assert day9(['X(8x2)(3x3)ABCY']) == {'part1': 18, 'part2': 20}
     # timeit 45 min
-    # assert day9_part2() == 11052855125
+    # assert day9() == {'part1': 150914, 'part2': 11052855125}
 
 
 def test_day8():
@@ -140,17 +138,17 @@ def test_day8():
 
 
 def test_day7():
-    assert day7_part1(['abba[mnop]qrst']) == 1
-    assert day7_part1(['abcd[bddb]xyyx']) == 0
-    assert day7_part1(['aaaa[qwer]tyui']) == 0
-    assert day7_part1(['ioxxoj[asdfgh]zxcvbn']) == 1
-    assert day7_part1() == 118
+    assert day7(['abba[mnop]qrst'])['part1'] == 1
+    assert day7(['abcd[bddb]xyyx'])['part1'] == 0
+    assert day7(['aaaa[qwer]tyui'])['part1'] == 0
+    assert day7(['ioxxoj[asdfgh]zxcvbn'])['part1'] == 1
 
-    assert day7_part2(['aba[bab]xyz']) == 1
-    assert day7_part2(['xyx[xyx]xyx']) == 0
-    assert day7_part2(['aaa[rur]uru']) == 1
-    assert day7_part2(['zazbz[bzb]cdb']) == 1
-    assert day7_part2() == 260
+    assert day7(['aba[bab]xyz'])['part2'] == 1
+    assert day7(['xyx[xyx]xyx'])['part2'] == 0
+    assert day7(['aaa[rur]uru'])['part2'] == 1
+    assert day7(['zazbz[bzb]cdb'])['part2'] == 1
+
+    assert day7() == {'part1': 118, 'part2': 260}
 
 
 def test_day6():
@@ -159,13 +157,11 @@ def test_day6():
     assert day6(example) == {'part1': 'easter', 'part2': 'advent'}
     assert day6() == {'part1': 'agmwzecr', 'part2': 'owlaxqvq'}
 
+
 # timeit 2 min
 # def test_day5():
-#     assert day5_part1('abc') == '18f47a30'
-#     assert day5_part1() == '801b56a7'
-#
-#     assert day5_part2('abc') == '05ace8e3'
-#     assert day5_part2() == '424a0197'
+#     assert day5('abc') == {'part1': '18f47a30', 'part2': '05ace8e3'}
+#     assert day5() == {'part1': '801b56a7', 'part2': '424a0197'}
 
 
 def test_day4():

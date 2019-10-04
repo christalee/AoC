@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 
-def input(filename: str):
+def input(filename: str) -> List[str]:
     with open('input_2016/' + filename, 'r') as input:
         data = [x.strip() for x in input]
 
@@ -250,7 +250,7 @@ def day19(size=3001330):
 
     # I tried speeding up execution with threading or multiprocessing, but concluded that the computation is CPU-bound and modifies a single massive data structure - I would have to chunk it manually. Along the way, I ran the above code for n from 2 to 50. Noticing a pattern in the output, I derived a formula for both results (see day19.ipynb to visualize)
 
-    # part1: 2^n = 1, then follow 2^n odd numbers (so the last is 2^n+1 - 1 : 2^n+1 - 1)
+    # Part 1: 2^n = 1, then follow 2^n odd numbers (so the last is 2^n+1 - 1 : 2^n+1 - 1)
     def part1(x):
         powers = [2**n for n in range(25)]
         odds = [1 + 2 * n for n in range(x)]
@@ -259,7 +259,7 @@ def day19(size=3001330):
         r = x - t[-1]
         return odds[r]
 
-    # part2: 1 : 1, if n : n then start 1, 2, 3 until n : n/2, then continue sequence of odds until n : n
+    # Part 2: 1 : 1, if n : n then start 1, 2, 3 until n : n/2, then continue sequence of odds until n : n
     def part2(x):
         odds = [1 + 2 * n for n in range(x)]
 
@@ -305,6 +305,7 @@ def day18(size, row=None):
         for x in range(len(row)):
             # going down the row, check what's to the left and right of each char
             c = row[x]
+
             if x == 0:
                 l = '.'
             else:
@@ -489,8 +490,7 @@ def day15():
     p1 = [d1, d2, d3, d4, d5, d6]
     p2 = p1 + [d7]
 
-    # Track global time t. Code each disk's position mod the time. Update each position until every disk reads 0 at the same time.
-
+    # Solution: Track global time t. Code each disk's position mod the time. Update each position until every disk reads 0 at the same time.
     def check(disks):
         time = 0
         while True:
@@ -590,7 +590,7 @@ def day13(goal=(39, 31), seed=1350):
 
     # Solution: Keep a list of the farthest locations you can reach in d steps, and a list of locations you've already visited.
 
-    # Note: since numpy arrays are indexed as (row, column), goal must be given as (y, x)
+    # Note: since numpy arrays are indexed as (row, column), goal is given as (y, x)
     frontier = [(1, 1)]
     visited = set(frontier)
     points = 0
@@ -821,10 +821,9 @@ def day10(commands=None):
     # Problem: You have instructions for a system of numbered bots that take in numbers, compare them, and deposit them into output bins. Bots don't take any action until they have two numbers to compare.
 
     # Solution: start by parsing the commands and populating a dict of bots, represented as dicts with fields for two values and the destination bins for each value; also a dict for each output bin, intially all set False
-
     def botnames():
         for c in commands:
-            # 'bot 0 gives low to output 2 and high to output 0' ->
+            # 'bot 0 gives low to output 2 and high to output 0' parses out to:
             x = c.split()
 
             # bots['bot0'] = {'low': False, 'high': False, 'lowdest': 'output2', 'highdest': 'output0'}}
@@ -839,20 +838,16 @@ def day10(commands=None):
             if len(x) > 6 and x[10] == 'output':
                 bots[(x[10] + x[11])] = {'value': False}
 
+    # Parse commands that assign values to various bots and bins
     def botvals():
-
-        # Parse commands that assign values to various bots and bins
-
         for c in commands:
             x = c.split()
 
             if x[0] == 'value':
                 deposit(bots[(x[4] + x[5])], int(x[1]))
 
+    # Given a bot or bin, deposit the value in one of the bot's slots or the bin.
     def deposit(bot, x):
-
-        # Given a bot or bin, deposit the value in one of the bot's slots or the bin.
-
         # bins: just dump the value in
         if 'value' in bot:
             bot['value'] = x
@@ -867,10 +862,8 @@ def day10(commands=None):
                 bot['high'] = bot['low']
                 bot['low'] = x
 
+    # If a bot has both values, send them to lowdest and highdest and reset them to False
     def botrun():
-
-        # If a bot has both values, send them to lowdest and highdest and reset them to False
-
         for b in bots.values():
             if ('low' in b) and b['low'] and b['high']:
                 deposit(bots[b['lowdest']], b['low'])
@@ -902,7 +895,28 @@ def day10(commands=None):
     return {'part1': p1, 'part2': p2}
 
 
-def day9_part2(data=None):
+def day9(data=None):
+
+    # Part 1: You need to decompress a data file. Compression markers are contained in parentheses. (10x2) means to take the next 10 characters and insert them 2 times, then continue reading forward. Ignore whitespace and do not include the marker itself in the decompressed text to insert. However, parentheses and other special characters may appear in inserted text without denoting a compression marker. What is the length of your decompressed file?
+
+    # Solution: Start at the beginning of the string. Find the first '('. Partition at the first ')'after that. Extract the rlen and rx from [0], and slice out s = [2][0:rlen]. Build up decompressed by adding rx*s. Recurse? on the string after the slice.
+
+    def expand_p1(s, d):
+        if s.startswith('('):
+            if len(s) == 1:
+                return d
+            else:
+                x = s.partition(')')
+                marker = x[0].strip('(').split('x')
+                rlen = int(marker[0])
+                rx = int(marker[1])
+                repstr = x[2][0:rlen]
+                d += len(repstr * rx)
+                return expand_p1(x[2][rlen:], d)
+        else:
+            x = s.partition('(')
+            d += len(x[0])
+            return expand_p1('(' + x[2], d)
 
     # Part 2: Turns out you need to expand markers within inserted text after all. What is the decompressed length of your file?
 
@@ -910,7 +924,7 @@ def day9_part2(data=None):
     # TODO Can this be optimized?? Am I storing the expanded string or just its length? Can I batch process this somehow? or parallelize?
     # TODO timeit to confirm that this is RAM limited?
 
-    def expand(s, d):
+    def expand_p2(s, d):
         i = 0
         while len(s) > 1:
             if s.startswith('('):
@@ -925,45 +939,13 @@ def day9_part2(data=None):
                 d += len(x[0])
                 s = '(' + x[2]
             i += 1
-            # Track progress during run
-            if i % 100000 == 0:
-                print(d, len(s))
 
         return d
 
     if not data:
         data = input('day9.txt')
 
-    return expand(data[0], 0)
-
-
-def day9_part1(data=None):
-
-    # Part 1: You need to decompress a data file. Compression markers are contained in parentheses. (10x2) means to take the next 10 characters and insert them 2 times, then continue reading forward. Ignore whitespace and do not include the marker itself in the decompressed text to insert. However, parentheses and other special characters may appear in inserted text without denoting a compression marker. What is the length of your decompressed file?
-
-    # Solution: Start at the beginning of the string. Find the first '('. Partition at the first ')'after that. Extract the rlen and rx from [0], and slice out s = [2][0:rlen]. Build up decompressed by adding rx*s. Recurse? on the string after the slice.
-
-    def expand(s, d):
-        if s.startswith('('):
-            if len(s) == 1:
-                return d
-            else:
-                x = s.partition(')')
-                marker = x[0].strip('(').split('x')
-                rlen = int(marker[0])
-                rx = int(marker[1])
-                repstr = x[2][0:rlen]
-                d += len(repstr * rx)
-                return expand(x[2][rlen:], d)
-        else:
-            x = s.partition('(')
-            d += len(x[0])
-            return expand('(' + x[2], d)
-
-    if not data:
-        data = input('day9.txt')
-
-    return expand(data[0], 0)
+    return {'part1': expand_p1(data[0], 0), 'part2': expand_p2(data[0], 0)}
 
 
 def day8(ops=None):
@@ -1011,96 +993,77 @@ def day8(ops=None):
     return np.sum(screen)
 
 
-def day7_xyx(s):
+def day7_abba(s: str) -> bool:
+    # Given a string, test each set of 4 consecutive characters for palindromes
+    # Return True if any 4 are valid, otherwise False
+    tf = [(s[i] == s[i + 1]) and (s[i - 1] == s[i + 2]) and (s[i] != s[i - 1]) for i in range(1, len(s) - 2)]
 
+    return True in tf
+
+
+def day7_xyx(s: str) -> List[str]:
     # Given a string, test each set of 3 consecutive characters for palindromes
     # Return a list for further testing
-
     trigrams = [s[i - 1:i + 1] for i in range(1, len(s) - 1) if (s[i - 1] == s[i + 1] and s[i] != s[i - 1])]
 
     return trigrams
 
 
-def day7_matches(a, b):
+def day7_matches(a: List[str], b: List[str]) -> bool:
+    # Given two lists of strings, check each item of a for matching any item in b
+    # TODO this checks the reverse of x against y; maybe rename this or reverse before passing into the fn? or when generating trigrams?
+    m = [True for x in a for y in b if x[::-1] == y]
 
-    # Given two lists of strings, check each item of a for matchng any item in b
-    # NOTE: this checks the reverse of x against y; maybe rename this or reverse before passing into the fn? or when generating trigrams?
-
-    return True in [True for x in a for y in b if x[::-1] == y]
+    return True in m
 
 
-def day7_part2(ips=None):
+def day7(ips=None):
+
+    # Part 1: Strings are valid if they contain a 4 character palindrome (e.g. abba, smms), unless the palindrome is inside square brackets or the characters are all the same (e.g. nnnn). How many of the given strings are valid?
 
     # Part 2: Strings are valid if they contain a 3 character palindrome (e.g. aba, sms) outside square brackets AND the corresponding inverse (e.g. sms -> msm) inside square brackets.
 
     if not ips:
         ips = input('day7.txt')
 
-    count = 0
+    p1 = 0
+    p2 = 0
 
     for i in ips:
-        outbs = []
-        inbs = []
+        p1_outbs = []
+        p1_inbs = []
+
+        p2_outbs = []
+        p2_inbs = []
 
         # Split each string up by square brackets
         x = i.split(']')
         for y in x:
             if '[' in y:
                 z = y.partition('[')
-                # Collect valid trigrams found outside square brackets
-                outbs.extend(day7_xyx(z[0]))
-                # Ditto, inside square brackets
-                inbs.extend(day7_xyx(z[2]))
-            # what to do if '[' isn't found (last segment)
+
+                # Check for valid palindromes outside and inside the square bracket
+                p1_outbs.append(day7_abba(z[0]))
+                p1_inbs.append(day7_abba(z[2]))
+
+                # Ditto for trigrams
+                p2_outbs.extend(day7_xyx(z[0]))
+                p2_inbs.extend(day7_xyx(z[2]))
+
+            # if '[' isn't found (last segment)
             else:
-                outbs.extend(day7_xyx(y))
+                p1_outbs.append(day7_abba(y))
+                p2_outbs.extend(day7_xyx(y))
 
-        if day7_matches(outbs, inbs):
-            count += 1
+        # Confirm that the palindromes are only outside the brackets
+        if True in p1_outbs and True not in p1_inbs:
+            p1 += 1
 
-    return count
+        # Check for a trigram outside and the inverse trigram inside the brackets
+        if day7_matches(p2_outbs, p2_inbs):
+            p2 += 1
 
-
-def day7_abba(s):
-
-    # Given a string, test each set of 4 consecutive characters for palindromes
-    # Return True if any 4 are valid, otherwise False
-
-    tf = [(s[i] == s[i + 1]) and (s[i - 1] == s[i + 2]) and (s[i] != s[i - 1]) for i in range(1, len(s) - 2)]
-
-    return True in tf
-
-
-def day7_part1(ips=None):
-
-    # Part 1: Strings are valid if they contain a 4 character palindrome (e.g. abba, smms), unless the palindrome is inside square brackets or the characters are all the same (e.g. nnnn). How many of the given strings are valid?
-
-    if not ips:
-        ips = input('day7.txt')
-
-    count = 0
-
-    for i in ips:
-        outbs = []
-        inbs = []
-
-        # Split each string up by square brackets
-        x = i.split(']')
-        for y in x:
-            if '[' in y:
-                z = y.partition('[')
-                if day7_abba(z[0]):
-                    outbs.append(True)
-                if day7_abba(z[2]):
-                    inbs.append(True)
-            # Check the last segment too
-            elif day7_abba(y):
-                outbs.append(True)
-
-        if True in outbs and True not in inbs:
-            count += 1
-
-    return count
+    return {'part1': p1, 'part2': p2}
 
 
 def day6(messages=None):
@@ -1125,42 +1088,29 @@ def day6(messages=None):
     return final
 
 
-def day5_part2(doorid='abbhdwsy'):
+def day5(doorid='abbhdwsy'):
 
-    # Problem: You are looking for an 8 character password. To find each character, determine the md5 hash of your input with an index that starts at 0 and increases each time. If the hexadecimal representation of the md5 result begins with 5 zeroes, the 7th digit is added to the password in the position given by the 6th digit. Only the first character found for each position is used, discard the rest.
+    # Part 1: You are looking for an 8 character password. To find each character, determine the md5 hash of your input with an index that starts at 0 and increases each time. If the hexadecimal representation of the md5 result begins with 5 zeroes, the 6th digit is appended to the password.
 
-    i: int = 0
-    password: List[str] = ['_'] * 8
-
-    # Run this loop until the password has changed from symbols to alphanumerics
-    while not ''.join(password).isalnum():
-        m = hashlib.md5()
-        m.update((doorid + str(i)).encode())
-        if m.hexdigest()[:5] == '00000' and m.hexdigest()[5].isdigit():
-            position = int(m.hexdigest()[5])
-            if position < 8 and password[position] == '_':
-                password[position] = m.hexdigest()[6]
-        i += 1
-
-    return ''.join(password)
-
-
-def day5_part1(doorid='abbhdwsy'):
-
-    # Problem: You are looking for an 8 character password. To find each character, determine the md5 hash of your input with an index that starts at 0 and increases each time. If the hexadecimal representation of the md5 result begins with 5 zeroes, the 6th digit is appended to the password.
+    # Part 2: You are looking for an 8 character password. To find each character, determine the md5 hash of your input with an index that starts at 0 and increases each time. If the hexadecimal representation of the md5 result begins with 5 zeroes, the 7th digit is added to the password in the position given by the 6th digit. Only the first character found for each position is used, discard the rest.
 
     i: int = 0
-    password: str = ''
+    p1: str = ''
+    p2: List[str] = ['_'] * 8
 
     # Run this loop until the password has changed from symbols to alphanumerics
-    while len(password) < 8:
+    while not ''.join(p2).isalnum():
         m = hashlib.md5()
         m.update((doorid + str(i)).encode())
         if m.hexdigest()[:5] == '00000':
-            password += m.hexdigest()[5]
+            p1 += m.hexdigest()[5]
+            if m.hexdigest()[5].isdigit():
+                position = int(m.hexdigest()[5])
+                if position < 8 and p2[position] == '_':
+                    p2[position] = m.hexdigest()[6]
         i += 1
 
-    return password
+    return {'part1': p1[:8], 'part2': ''.join(p2)}
 
 
 def day4(rooms=None):
@@ -1197,7 +1147,6 @@ def day4(rooms=None):
             idsum += int(sectorid)
 
             ptext = []
-            # string constant holding the alphabet
             a = string.ascii_lowercase
 
             for each in rest[0]:
@@ -1222,9 +1171,7 @@ def day4(rooms=None):
 
 
 def day3_check(triplet: List[int]) -> bool:
-
-    # A helper function to check if a list of 3 integers makes a closed triangle.
-
+    # Check if a list of 3 integers makes a closed triangle
     c = max(triplet)
     triplet.remove(c)
     a, b = triplet
@@ -1240,7 +1187,7 @@ def day3(triangles=None):
     if not triangles:
         triangles = input('day3.txt')
 
-    # Problem: given a list of numbers, separate them into groups of 3. How many of these groups could be the sides of a triangle (a + b > c)?
+    # Part 1: given a list of numbers, separate them into groups of 3. How many of these groups could be the sides of a triangle (a + b > c)?
 
     htri: List[List[int]] = [list(map(int, x.split())) for x in triangles]
 
@@ -1254,31 +1201,6 @@ def day3(triangles=None):
     p2: int = len([x for x in vtri if day3_check(x)])
 
     return {'part1': p1, 'part2': p2}
-
-
-def day2_solve(keys, keypad, location):
-    keycode = ''
-
-    for k in keys:
-        for direction in k:
-            next = copy.deepcopy(location)
-            if direction == "U":
-                next[1] += 1
-            if direction == "D":
-                next[1] -= 1
-            if direction == "R":
-                next[0] += 1
-            if direction == "L":
-                next[0] -= 1
-
-            # Only make a move if it's an existing key!
-            if str(next) in keypad:
-                location = copy.deepcopy(next)
-
-        # After each set of directions has been processed, add the current key to the keycode
-        keycode += keypad[str(location)]
-
-    return keycode
 
 
 def day2(keys=None):
@@ -1301,6 +1223,30 @@ def day2(keys=None):
 
     origin_p1 = [0, 0]
 
+    def solve(keys, keypad, location):
+        keycode = ''
+
+        for k in keys:
+            for direction in k:
+                next = copy.deepcopy(location)
+                if direction == "U":
+                    next[1] += 1
+                if direction == "D":
+                    next[1] -= 1
+                if direction == "R":
+                    next[0] += 1
+                if direction == "L":
+                    next[0] -= 1
+
+                # Only make a move if it's an existing key!
+                if str(next) in keypad:
+                    location = copy.deepcopy(next)
+
+            # After each set of directions has been processed, add the current key to the keycode
+            keycode += keypad[str(location)]
+
+        return keycode
+
     # Part 2: Solve as before, on a 13-digit keypad, starting at key 5 (coordinates (-2, 0)).
 
     # Keypad
@@ -1319,10 +1265,11 @@ def day2(keys=None):
 
     origin_p2 = [-2, 0]
 
-    return {'part1': day2_solve(keys, keypad_p1, origin_p1), 'part2': day2_solve(keys, keypad_p2, origin_p2)}
+    return {'part1': solve(keys, keypad_p1, origin_p1), 'part2': solve(keys, keypad_p2, origin_p2)}
 
 
 def day1(path=None):
+
     # Part 1: You are given a series of directions indicating a direction to turn and a number of blocks of travel on a grid. How many blocks away from the origin do you end up? Count total blocks as x + y, not as the crow flies.
 
     if not path:

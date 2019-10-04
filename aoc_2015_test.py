@@ -9,13 +9,14 @@ def test_day10():
     assert day10(2, '1') == '21'
     assert day10(5, '1') == '312211'
 
-    # assert len(day10(40,)) == 360154
+    assert len(day10(40,)) == 360154
 
 
 def test_day9():
     test = ['London to Dublin = 464',
             'London to Belfast = 518',
             'Dublin to Belfast = 141']
+
     assert day9(test) == (605, 982)
     assert day9() == (251, 898)
 
@@ -23,11 +24,9 @@ def test_day9():
 def test_day8():
     with open('input_2015/day8_test.txt', 'r') as input:
         test = input.read().split()
-    assert day8_part1(test) == 12
-    assert day8_part2(test) == 19
 
-    assert day8_part1() == 1371
-    assert day8_part2() == 2117
+    assert day8(test) == {'part1': 12, 'part2': 19}
+    assert day8() == {'part1': 1371, 'part2': 2117}
 
 
 def test_day7():

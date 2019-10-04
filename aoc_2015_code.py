@@ -20,7 +20,7 @@ def input(filename: str):
     return data
 
 
-# Is there any way to speed this up? concurrent.futures?
+# TODO Is there any way to speed this up?
 def day10(i: int, digits: str = '1113122113'):
     while i > 0:
         numerals: List[str] = []
@@ -61,7 +61,7 @@ def day9(distances=None):
         legs.loc[d[0], d[1]] = d[2]
         legs.loc[d[1], d[0]] = d[2]
 
-    # that for/enumerate/if loop is clumsy - fix it
+    # TODO that for/enumerate/if loop is clumsy - fix it
     # maybe lookup distances directly in parsed[] instead of legs[DF]?
     journeys: Dict[str, int] = {}
     itineraries = itertools.permutations(stops)
@@ -75,44 +75,42 @@ def day9(distances=None):
     return (min(journeys.values()), max(journeys.values()))
 
 
-def day8_part2(strings=None):
-    if not strings:
-        with open('input_2015/day8.txt', 'r') as input:
-            strings = input.read().split()
-
-    raw = sum(map(len, strings))
-    encoded = 0
-
-    for s in strings:
-        if '\"' in s:
-            s = s.replace('\"', '__')
-        if '\\' in s:
-            s = s.replace('\\', '__')
-        encoded += len(s) + 2
-
-    return encoded - raw
-
-
 # TODO change these all to re.sub / skip the if clauses
-def day8_part1(strings=None):
+def day8(strings=None):
     if not strings:
         with open('input_2015/day8.txt', 'r') as input:
             strings = input.read().split()
 
     raw = sum(map(len, strings))
-    decoded = 0
 
-    for s in strings:
-        t = s.strip('"')
-        if r'\x' in t:
-            t = re.sub(r'(\\x[a-fA-F0-9]{2})', '_', t)
-        if r'\"' in t:
-            t = t.replace(r'\"', '_')
-        if r'\\' in t:
-            t = t.replace(r'\\', '_')
-        decoded += len(t)
+    def decode(strings):
+        decoded = 0
 
-    return raw - decoded
+        for s in strings:
+            t = s.strip('"')
+            if r'\x' in t:
+                t = re.sub(r'(\\x[a-fA-F0-9]{2})', '_', t)
+            if r'\"' in t:
+                t = t.replace(r'\"', '_')
+            if r'\\' in t:
+                t = t.replace(r'\\', '_')
+            decoded += len(t)
+
+        return raw - decoded
+
+    def encode(strings):
+        encoded = 0
+        # TODO this modifies strings in place - make a copy instead?
+        for s in strings:
+            if '\"' in s:
+                s = s.replace('\"', '__')
+            if '\\' in s:
+                s = s.replace('\\', '__')
+            encoded += len(s) + 2
+
+        return encoded - raw
+
+    return {'part1': decode(strings), 'part2': encode(strings)}
 
 
 def day7(instructions=None):
