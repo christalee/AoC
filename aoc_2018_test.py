@@ -1,19 +1,19 @@
 from aoc_2018_code import *
 
-
-def test_day7():
-    pass
-
-
-def test_day6():
-    pass
-
-
-def test_day5():
-    pass
+# def test_day7():
+#     pass
+#
+#
+# def test_day6():
+#     pass
+#
+#
+# def test_day5():
+#     pass
 
 
 def test_day4():
+    # timeit 20 s
     example = [
         '[1518-11-01 00:00] Guard #10 begins shift',
         '[1518-11-01 00:05] falls asleep',
@@ -37,16 +37,16 @@ def test_day4():
     assert day4_part1(example) == 240
     assert day4_part2(example) == 4455
 
-    # assert day4_part1() == 39698
-    # assert day4_part2() == 14920
+    assert day4_part1() == 39698
+    assert day4_part2() == 14920
 
-
-def test_day3():
-    pass
-
-
-def test_day2():
-    pass
+#
+# def test_day3():
+#     pass
+#
+#
+# def test_day2():
+#     pass
 
 
 def test_day1():

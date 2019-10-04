@@ -773,16 +773,19 @@ def day11(floors=None):
 
         return m
 
+    # From a list of states reachable in the current number of moves, return a list of valid next states
     def pathfind(border):
-        nonlocal moves, visited
+        global moves, visited
 
         newborder = []
         for p in border:
+            # if all the objects have reached the top floor, we're done!
             if len(p[-1]) == total:
                 newborder = moves
                 break
             else:
                 for m in nextmoves(p):
+                    # if we've already visited this state, skip it; otherwise, carry on
                     if str(m) not in visited:
                         visited.add(str(m))
                         newborder.append(m)
@@ -791,8 +794,17 @@ def day11(floors=None):
         return newborder
 
     def solve(floors):
+        global moves, visited, total
+
+        moves = 0
+        visited = {str(floors[0])}
+
+        # be flexible about how many objects need to be moved
+        total = len([i for s in floors[0][1:] for i in s])
+
         while not isinstance(floors, int):
             floors = pathfind(floors)
+
         return floors
 
     if not floors:

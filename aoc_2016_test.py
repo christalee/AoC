@@ -44,10 +44,11 @@ def test_day19():
 
 
 def test_day18():
+    # timeit 30 s
     assert day18(3, ['..^^.']) == 6
     assert day18(10, ['.^^.^.^^^^']) == 38
     assert day18(40) == 1951
-    # assert day18(400000) == 20002936
+    assert day18(400000) == 20002936
 
 
 def test_day17():
@@ -58,15 +59,16 @@ def test_day17():
 
 
 def test_day16():
+    # timeit 20 s
     assert day16(20, '10000') == '01100'
     assert day16(272) == '10100011010101011'
-    # assert day16(35651584) == '01010001101011001'
+    assert day16(35651584) == '01010001101011001'
 
 
-# def test_day15():
-#     assert day15() == {'part1': 376777, 'part2': 3903937}
+def test_day15():
+    assert day15() == {'part1': 376777, 'part2': 3903937}
 
-
+# timeit 5 min
 # def test_day14():
 #     assert day14('abc') == {'part1': 22728, 'part2': 22551}
 #     assert day14() == {'part1': 16106, 'part2': 22423}
@@ -90,14 +92,16 @@ def test_day13():
 
 
 def test_day12():
+    # timeit 30-60 s
     example = ['cpy 41 a', 'inc a', 'inc a', 'dec a', 'jnz a 2', 'dec a']
     assert day12(example)['part1'] == 42
-    # assert day12() == {'part1': 318077, 'part2': 9227731}
+    assert day12() == {'part1': 318077, 'part2': 9227731}
 
 
 def test_day11():
     example = [[0, ['HM', "LM"], ["HG"], ["LG"], []]]
     assert day11(example) == 11
+    # timeit 75 min
     # assert day11() == {'part1': 31, 'part2': 55}
 
 
@@ -126,6 +130,7 @@ def test_day9():
     assert day9_part2(['X(8x2)(3x3)ABCY']) == 20
     assert day9_part2(['(27x12)(20x12)(13x14)(7x10)(1x12)A']) == 241920
     assert day9_part2(['(25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN']) == 445
+    # timeit 45 min
     # assert day9_part2() == 11052855125
 
 
@@ -154,7 +159,7 @@ def test_day6():
     assert day6(example) == {'part1': 'easter', 'part2': 'advent'}
     assert day6() == {'part1': 'agmwzecr', 'part2': 'owlaxqvq'}
 
-
+# timeit 2 min
 # def test_day5():
 #     assert day5_part1('abc') == '18f47a30'
 #     assert day5_part1() == '801b56a7'
@@ -179,11 +184,8 @@ def test_day3():
 
 
 def test_day2():
-    assert day2_part1(['ULL', 'RRDDD', 'LURDL', 'UUUUD']) == '1985'
-    assert day2_part1() == '98575'
-
-    assert day2_part2(['ULL', 'RRDDD', 'LURDL', 'UUUUD']) == '5DB3'
-    assert day2_part2() == 'CD8D4'
+    assert day2(['ULL', 'RRDDD', 'LURDL', 'UUUUD']) == {'part1': '1985', 'part2': '5DB3'}
+    assert day2() == {'part1': '98575', 'part2': 'CD8D4'}
 
 
 def test_day1():
