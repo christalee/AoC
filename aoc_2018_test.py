@@ -34,31 +34,35 @@ def test_day4():
         '[1518-11-05 00:55] wakes up'
     ]
 
-    assert day4_part1(example) == 240
-    assert day4_part2(example) == 4455
-
-    assert day4_part1() == 39698
-    assert day4_part2() == 14920
+    assert day4(example) == {'part1': 240, 'part2': 4455}
+    assert day4() == {'part1': 39698, 'part2': 14920}
 
 #
 # def test_day3():
 #     pass
 #
 #
-# def test_day2():
-#     pass
+
+
+def test_day2():
+    example1 = ["abcdef", "bababc", "abbcde", "abcccd", "aabcdd", "abcdee", "ababab"]
+    example2 = ["abcde", "fghij", "klmno", "pqrst", "fguij", "axcye", "wvxyz"]
+
+    assert day2(example1) == {'part1': 12, 'part2': 'abcd'}
+    assert day2(example2) == {'part1': 0, 'part2': 'fgij'}
+    assert day2() == {'part1': 6723, 'part2': 'prtkqyluiusocwvaezjmhmfgx'}
 
 
 def test_day1():
-    assert day1_part1([+1, -2, +3, +1]) == 3
-    assert day1_part1([+1, +1, +1]) == 3
-    assert day1_part1([+1, +1, -2]) == 0
-    assert day1_part1([-1, -2, -3]) == -6
-    assert day1_part1() == 585
+    # Note: these test cases are only valid for part 1; they never return for part 2
+    # assert day1([+1, +1, +1])['part1'] == 3
+    # assert day1([-1, -2, -3])['part1'] == -6
 
-    assert day1_part2([+1, -2, +3, +1]) == 2
-    assert day1_part2([+1, -1]) == 0
-    assert day1_part2([+3, +3, +4, -2, -4]) == 10
-    assert day1_part2([-6, +3, +8, +5, -6]) == 5
-    assert day1_part2([+7, +7, -2, -7, -4]) == 14
-    assert day1_part2() == 83173
+    assert day1([+1, +1, -2]) == {'part1': 0, 'part2': 0}
+    assert day1([+1, -1]) == {'part1': 0, 'part2': 0}
+    assert day1([+3, +3, +4, -2, -4]) == {'part1': 4, 'part2': 10}
+    assert day1([-6, +3, +8, +5, -6]) == {'part1': 4, 'part2': 5}
+    assert day1([+7, +7, -2, -7, -4]) == {'part1': 1, 'part2': 14}
+    assert day1([+1, -2, +3, +1]) == {'part1': 3, 'part2': 2}
+
+    assert day1() == {'part1': 585, 'part2': 83173}

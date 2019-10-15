@@ -1,9 +1,7 @@
 from aoc_2016_code import *
 
 # TODO
-# refactor solutions to eliminate repeated chunks
-# refactor for elegance, clarity, and efficiency
-# finish writing tests for all solutions
+# review problem statements for additional test cases
 # write tests for nested fns? subproblems?
 
 

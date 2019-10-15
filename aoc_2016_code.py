@@ -4,6 +4,12 @@
 # Advent of Code 2016
 # http://adventofcode.com/2016/
 
+# TODO
+# - review all ipynb for cruft & comments
+# - factor out nested fns and subproblems
+# - refactor for elegance, clarity, and performance (see timeit notes)
+# - add types to all nested fns and key vars
+# - resolve all TODOs
 
 import copy
 import hashlib

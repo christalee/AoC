@@ -4,6 +4,16 @@
 # Advent of Code 2015
 # http://adventofcode.com/2015/
 
+# TODO
+# - finish solutions for problems 11-25
+# - add problem statements for all solutions
+# - combine any part1/part2 solutions into single fns
+# - review all ipynb for cruft & comments
+# - factor out nested fns and subproblems
+# - refactor for elegance, clarity, and performance (see timeit notes)
+# - add types to all nested fns and key vars
+# - resolve all TODOs
+
 import hashlib
 import itertools
 import re
@@ -20,7 +30,6 @@ def input(filename: str):
     return data
 
 
-# TODO Is there any way to speed this up?
 def day10(i: int, digits: str = '1113122113'):
     while i > 0:
         numerals: List[str] = []

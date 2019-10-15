@@ -1,5 +1,11 @@
 from aoc_2015_code import *
 
+# TODO
+# - write tests for all solutions
+# - review problem statements for additional test cases
+# - write tests for nested fns, subproblems
+# - check runtimes for all tests and comment out the slowest
+
 
 def test_day10():
     assert day10(1, '1') == '11'
