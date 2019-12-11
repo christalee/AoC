@@ -8,8 +8,13 @@ from aoc_2018_code import *
 #     pass
 #
 #
-# def test_day5():
-#     pass
+
+
+def test_day5():
+    example = "dabAcCaCBAcCcaDA"
+
+    assert day5(example) == {'part1': 10, 'part2': 4}
+    assert day5() == {'part1': 9462, 'part2': 4952}
 
 
 def test_day4():
@@ -37,11 +42,12 @@ def test_day4():
     assert day4(example) == {'part1': 240, 'part2': 4455}
     assert day4() == {'part1': 39698, 'part2': 14920}
 
-#
-# def test_day3():
-#     pass
-#
-#
+
+def test_day3():
+    example = ["#1 @ 1,3: 4x4", "#2 @ 3,1: 4x4", "#3 @ 5,5: 2x2"]
+
+    assert day3(example) == {'part1': 4, "part2": 3}
+    assert day3() == {'part1': 115348, "part2": 188}
 
 
 def test_day2():

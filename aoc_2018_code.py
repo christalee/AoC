@@ -18,6 +18,35 @@ def input(filename):
     return data
 
 
+def day5(polymer=None):
+    if not polymer:
+        polymer = input('day5.txt')[0]
+
+    x = set(list(polymer.lower()))
+
+    def react(p):
+        done = False
+
+        while not done:
+            count = len(p)
+            for y in x:
+                a = y + y.upper()
+                if a in p or a[::-1] in p:
+                    p = p.replace(a, "").replace(a[::-1], "")
+
+            if len(p) == count:
+                done = True
+
+        return p
+
+    tally = {}
+    for y in x:
+        q = polymer.replace(y, "").replace(y.upper(), "")
+        tally[y] = len(react(q))
+
+    return {'part1': len(react(polymer)), 'part2': min(tally.values())}
+
+
 def day4(records=None):
 
     # Problem: You have a timestamped log showing when each guard came on duty, when they fall asleep, and when they wake up. You want to use this information to sneak past the guard tonight, after midnight.
@@ -68,6 +97,33 @@ def day4(records=None):
     top_guard = by_minutes[[top_minute]].idxmax().item()
 
     return {'part1': int(g.strip('#')) * m, 'part2': int(top_guard.strip('#')) * top_minute}
+
+
+def day3(squares=None):
+    if not squares:
+        squares = input("day3.txt")
+
+    fabric = np.zeros((1000, 1000), dtype=int)
+    parsed = {}
+    r = 0
+
+    for s in squares:
+        a, b, c, d = s.split()
+        x1, y1 = list(map(int, c.strip(":").split(',')))
+        x2, y2 = list(map(int, d.split("x")))
+
+        parsed[a] = [x1, x1 + x2, y1, y1 + y2]
+
+    for x in parsed:
+        a, b, c, d = parsed[x]
+        fabric[a:b, c:d] += 1
+
+    for x in parsed:
+        a, b, c, d = parsed[x]
+        if np.all(fabric[a:b, c:d] == 1):
+            r = int(x.strip("#"))
+
+    return {"part1": np.count_nonzero(np.where(fabric > 1, 1, 0)), "part2": r}
 
 
 def day2(boxes=None):
