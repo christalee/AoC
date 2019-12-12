@@ -14,7 +14,7 @@ def test_day5():
     example = "dabAcCaCBAcCcaDA"
 
     assert day5(example) == {'part1': 10, 'part2': 4}
-    assert day5() == {'part1': 9462, 'part2': 4952}
+    # assert day5() == {'part1': 9462, 'part2': 4952}
 
 
 def test_day4():
@@ -40,7 +40,7 @@ def test_day4():
     ]
 
     assert day4(example) == {'part1': 240, 'part2': 4455}
-    assert day4() == {'part1': 39698, 'part2': 14920}
+    # assert day4() == {'part1': 39698, 'part2': 14920}
 
 
 def test_day3():

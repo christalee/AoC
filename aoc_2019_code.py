@@ -16,6 +16,77 @@ def input(filename: str):
     return data
 
 
+def day5(sysid, opcodes=None):
+    if not opcodes:
+        opcodes = input('day5.txt')[0]
+
+    ops = list(map(int, opcodes.split(',')))
+    i = 0
+    result = 0
+
+    def getints(ops, params, modes):
+        results = []
+        for p, m in zip(params, modes):
+            if m == "0":
+                results.append(ops[p])
+            if m == "1":
+                results.append(p)
+        return results
+
+    while True:
+        o = str(ops[i])
+        if o[-2:] == "99":
+            break
+        if o[-1] == "3":
+            ops[ops[i + 1]] = sysid
+            i += 2
+        if o[-1] == "4":
+            if o[0] == "1":
+                result = ops[i + 1]
+            else:
+                result = ops[ops[i + 1]]
+            i += 2
+
+        if o[-1] in '125678':
+            while len(o) < 5:
+                o = '0' + o
+            a, b = getints(ops, [ops[i + 1], ops[i + 2]], [o[2], o[1]])
+            c = ops[i + 3]
+
+            if o[-1] == "1":
+                ops[c] = a + b
+                i += 4
+            if o[-1] == "2":
+                ops[c] = a * b
+                i += 4
+
+            if o[-1] == "5":
+                if a != 0:
+                    i = b
+                else:
+                    i += 3
+            if o[-1] == "6":
+                if a == 0:
+                    i = b
+                else:
+                    i += 3
+
+            if o[-1] == "7":
+                if a < b:
+                    ops[c] = 1
+                else:
+                    ops[c] = 0
+                i += 4
+            if o[-1] == "8":
+                if a == b:
+                    ops[c] = 1
+                else:
+                    ops[c] = 0
+                i += 4
+
+    return result
+
+
 def day4():
     p1 = 0
     p2 = 0

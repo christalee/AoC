@@ -46,7 +46,7 @@ def test_day18():
     assert day18(3, ['..^^.']) == 6
     assert day18(10, ['.^^.^.^^^^']) == 38
     assert day18(40) == 1951
-    assert day18(400000) == 20002936
+    # assert day18(400000) == 20002936
 
 
 def test_day17():
@@ -60,7 +60,7 @@ def test_day16():
     # timeit 20 s
     assert day16(20, '10000') == '01100'
     assert day16(272) == '10100011010101011'
-    assert day16(35651584) == '01010001101011001'
+    # assert day16(35651584) == '01010001101011001'
 
 
 def test_day15():
@@ -93,7 +93,7 @@ def test_day12():
     # timeit 30-60 s
     example = ['cpy 41 a', 'inc a', 'inc a', 'dec a', 'jnz a 2', 'dec a']
     assert day12(example)['part1'] == 42
-    assert day12() == {'part1': 318077, 'part2': 9227731}
+    # assert day12() == {'part1': 318077, 'part2': 9227731}
 
 
 def test_day11():
