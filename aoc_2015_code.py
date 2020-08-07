@@ -13,10 +13,14 @@
 # - refactor for elegance, clarity, and performance (see timeit notes)
 # - add types to all nested fns and key vars
 # - resolve all TODOs
+# - refactor: list/dict comprehensions, iterator/generators, collections.Counter, map/filter
 
+import collections
 import hashlib
 import itertools
+import operator
 import re
+import string
 from typing import Dict, List, Optional, Union
 
 import numpy as np
@@ -28,6 +32,302 @@ def input(filename: str):
         data = [x.strip() for x in input]
 
     return data
+
+
+def day18_neighbors(point, lights):
+    n = []
+    for x in [point[0] - 1, point[0], point[0] + 1]:
+        for y in [point[1] - 1, point[1], point[1] + 1]:
+            if x >= 0 and x < lights.shape[0] and y >= 0 and y < lights.shape[1]:
+                n.append(lights[(x, y)])
+            else:
+                n.append('.')
+    n.remove(lights[point])
+    return n
+
+
+def day18_part2(cycles, lights=None):
+    if not lights:
+        lights = input('day18.txt')
+    lights = np.array(list(map(list, lights)))
+
+    for x in range(cycles):
+        for c in [(0, 0), (0, lights.shape[0] - 1), (lights.shape[1] - 1, 0), (lights.shape[1] - 1, lights.shape[0] - 1)]:
+            lights[c] = '#'
+        nditer = np.nditer(lights, flags=['multi_index', 'refs_ok'], op_flags=['readonly', 'copy'])
+        with nditer as it:
+            newlights = np.empty(lights.shape, dtype='<U1')
+            for light in it:
+                i = it.multi_index
+                n = day18_neighbors(i, lights)
+                if light == '#':
+                    if n.count('#') != 2 and n.count('#') != 3:
+                        newlights[i] = '.'
+                    else:
+                        newlights[i] = '#'
+                if light == ".":
+                    if n.count("#") == 3:
+                        newlights[i] = '#'
+                    else:
+                        newlights[i] = '.'
+
+        lights = np.array(newlights)
+
+    for c in [(0, 0), (0, lights.shape[0] - 1), (lights.shape[1] - 1, 0), (lights.shape[1] - 1, lights.shape[0] - 1)]:
+        lights[c] = '#'
+    return np.sum(np.char.count(lights, '#'))
+
+
+def day18_part1(cycles, lights=None):
+    if not lights:
+        lights = input('day18.txt')
+    lights = np.array(list(map(list, lights)))
+
+    for x in range(cycles):
+        nditer = np.nditer(lights, flags=['multi_index', 'refs_ok'], op_flags=['readonly', 'copy'])
+        with nditer as it:
+            newlights = np.empty(lights.shape, dtype='<U1')
+            for light in it:
+                i = it.multi_index
+                n = day18_neighbors(i, lights)
+                if light == '#':
+                    if n.count('#') != 2 and n.count('#') != 3:
+                        newlights[i] = '.'
+                    else:
+                        newlights[i] = '#'
+                if light == ".":
+                    if n.count("#") == 3:
+                        newlights[i] = '#'
+                    else:
+                        newlights[i] = '.'
+
+        lights = np.array(newlights)
+
+    return np.sum(np.char.count(lights, '#'))
+
+
+def day17(eggnog, containers=None):
+    if not containers:
+        containers = list(map(int, input("day17.txt")))
+
+    combos = []
+    for i in range(len(containers)):
+        combos += itertools.combinations(containers, i)
+
+    part1 = [x for x in combos if sum(x) == eggnog]
+    part2 = [x for x in part1 if len(x) == len(part1[0])]
+    return {"part1": len(part1), "part2": len(part2)}
+
+
+def day16():
+    target = {"children": 3,
+              "cats": 7,
+              "samoyeds": 2,
+              "pomeranians": 3,
+              "akitas": 0,
+              "vizslas": 0,
+              "goldfish": 5,
+              "trees": 3,
+              "cars": 2,
+              "perfumes": 1}
+    text = input('day16.txt')
+
+    sues = {}
+    for s in text:
+        t = s.split(':', 1)
+        k = dict([x.split(':') for x in t[1].split(',')])
+        sues[int(t[0].split()[1])] = dict(zip(map(str.strip, k.keys()), map(int, k.values())))
+
+    part1 = []
+    part2 = []
+
+    for k, v in sues.items():
+        for t in target:
+            if t in v:
+                if target[t] == v[t]:
+                    part1.append(k)
+                if t in ["cats", "trees"] and target[t] < v[t]:
+                    part2.append(k)
+                if t in ["pomeranians", "goldfish"] and target[t] > v[t]:
+                    part2.append(k)
+                if t not in ["cats", "trees", "pomeranians", "goldfish"] and target[t] == v[t]:
+                    part2.append(k)
+
+    results = {}
+    results["part1"] = collections.Counter(part1).most_common(1)[0][0]
+    results["part2"] = collections.Counter(part2).most_common(1)[0][0]
+    return results
+
+
+def day15(text=None):
+    if not text:
+        text = input('day15.txt')
+
+    stats = {}
+    for s in text:
+        q = {}
+        i = s.split(":")
+        t = i[1].split(",")
+        for u in t:
+            v = u.split()
+            q[v[0]] = int(v[1])
+        stats[i[0]] = q
+
+    ingredients = set([s.split()[0].strip(':') for s in text])
+    amounts = [(a, b, c, 100 - a - b - c) for a in range(101) for b in range(101 - a) for c in range(101 - a - b)]
+    part1 = {}
+    part2 = {}
+    keys = list(stats[list(ingredients)[0]])
+    keys.remove("calories")
+    for a in amounts:
+        score = 1
+        for j in keys:
+            score *= max(0, sum(map(operator.mul, [stats[k][j] for k in ingredients], a)))
+        part1[score] = dict(zip(ingredients, a))
+
+        calories = sum(map(operator.mul, [stats[k]['calories'] for k in ingredients], a))
+        if calories == 500:
+            part2[score] = dict(zip(ingredients, a))
+
+    return {"part1": max(part1.keys()), "part2": max(part2.keys())}
+
+
+def day14_part2(time, text=None):
+    if not text:
+        text = input("day14.txt")
+
+    reindeer = set([s.split()[0] for s in text])
+    stats = dict.fromkeys(reindeer, {})
+    for s in text:
+        parsed = {}
+        t = s.split()
+        parsed["speed"] = int(t[3])
+        parsed["sprint"] = int(t[6])
+        parsed["rest"] = int(t[13])
+        stats[t[0]] = parsed
+
+    scores = dict.fromkeys(reindeer, 0)
+    for x in range(1, time + 1):
+        distances = dict.fromkeys(reindeer, 0)
+        for r in reindeer:
+            d = 0
+            vals = stats[r]
+            remainder = x % (vals["sprint"] + vals["rest"])
+            cycles = (x - remainder) / (vals["sprint"] + vals["rest"])
+            d = vals["speed"] * (cycles * vals["sprint"] + min(remainder, vals["sprint"]))
+            distances[r] += d
+
+        winner = max(distances.values())
+        for r in distances:
+            if distances[r] == winner:
+                scores[r] += 1
+
+    return max(scores.values())
+
+
+def day14_part1(time, text=None):
+    if not text:
+        text = input("day14.txt")
+
+    reindeer = set([s.split()[0] for s in text])
+    stats = dict.fromkeys(reindeer, {})
+    for s in text:
+        parsed = {}
+        t = s.split()
+        parsed["speed"] = int(t[3])
+        parsed["sprint"] = int(t[6])
+        parsed["rest"] = int(t[13])
+        stats[t[0]] = parsed
+
+    scores = {}
+    for r in reindeer:
+        vals = stats[r]
+        remainder = time % (vals["sprint"] + vals["rest"])
+        cycles = (time - remainder) / (vals["sprint"] + vals["rest"])
+        d = cycles * vals["speed"] * vals["sprint"]
+        if vals["sprint"] <= remainder:
+            d += vals["speed"] * vals["sprint"]
+
+        scores[r] = d
+
+    return max(scores.values())
+
+
+def day13_part2(relations=None):
+    # TODO: make this more elegant
+    if not relations:
+        relations = input("day13.txt")
+
+    guests = set([s.split()[0] for s in relations])
+    for g in guests:
+        relations.append(g + " would gain 0 happiness units by sitting next to Talia.")
+        relations.append("Talia would gain 0 happiness units by sitting next to " + g)
+
+    return day13_part1(relations)
+
+
+def day13_part1(relations=None):
+    if not relations:
+        relations = input("day13.txt")
+
+    guests = set([s.split()[0] for s in relations])
+    parsed = []
+    for s in relations:
+        t = s.split()
+        if t[2] == "gain":
+            t[2] = "+"
+        if t[2] == "lose":
+            t[2] = '-'
+        parsed.append([t[0], int(t[2] + t[3]), t[-1].strip('.')])
+
+    # TODO again, is this really necessary? It is convenient.
+    vals = pd.DataFrame(columns=guests, index=guests)
+    for d in parsed:
+        vals.loc[d[0], d[2]] = d[1]
+
+    # TODO this checks each route multiple times, since they loop
+    scores = {}
+    seating = itertools.permutations(guests)
+    for i in seating:
+        d = 0
+        for n, s in enumerate(i):
+            t = (n + 1) % len(guests)
+            d += vals.loc[s, i[t]] + vals.loc[i[t], s]
+        scores[i] = d
+
+    return max(scores.values())
+
+
+def day12(json=None):
+    if not json:
+        json = input("day12.txt")
+
+    part1 = sum(list(map(int, re.sub(r'[^0-9-]', ' ', json[0]).split())))
+
+    return {"part1": part1}
+
+
+def day11_alpha_inc(s):
+    ab = string.ascii_lowercase
+    while len(s) > 0:
+        i = ab.index(s[-1])
+        if i == 25:
+            return day11_alpha_inc(s[:-1]) + "a"
+        else:
+            return s[:-1] + ab[i + 1]
+
+
+def day11(pw=None):
+    if not pw:
+        pw = 'aaaaaaaa'
+    ab = string.ascii_lowercase
+    while pw != "zzzzzzzz":
+        if not re.search(r'[iol]', pw) and re.search(r'.*(.)\1.*(.)\2.*', pw):
+            for i in range(len(ab)):
+                t = ab[i:i + 3]
+                if len(t) == 3 and t in pw:
+                    return pw
+        pw = day11_alpha_inc(pw)
 
 
 def day10(i: int, digits: str = '1113122113'):

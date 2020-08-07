@@ -4,9 +4,12 @@
 # Advent of Code 2019
 # http://adventofcode.com/2019/
 
+import itertools as it
 import math
 import re
 from typing import Dict, List, Optional, Tuple, Union
+
+import numpy as np
 
 
 def input(filename: str):
@@ -15,8 +18,99 @@ def input(filename: str):
 
     return data
 
+# This is used in various Intcode-related puzzles
 
-def day5(sysid, opcodes=None):
+
+def getints(ops, params, modes):
+    results = []
+    for p, m in zip(params, modes):
+        if m == "0":
+            results.append(ops[p])
+        if m == "1":
+            results.append(p)
+    return results
+
+
+def day8(dimensions=None, image=None):
+    if not image:
+        dimensions = (-1, 6, 25)
+        image = input('day8.txt')[0]
+
+    i_array = np.reshape(np.array(list(map(int, image))), dimensions)
+
+    index = -1
+    max = 0
+    for x, y in enumerate(i_array):
+        nz = np.count_nonzero(y)
+        if nz > max:
+            max = nz
+            index = x
+
+    layer = i_array[index]
+    ones = layer[np.equal(1, layer)]
+    twos = layer[np.equal(2, layer)]
+
+    # For part 2, just read the answer off the screen
+    result = []
+    for x in range(dimensions[1]):
+        for y in range(dimensions[2]):
+            z = i_array.take([x][0], axis=1).take(y, axis=1)
+            for v in z:
+                if v == 0 or v == 1:
+                    result.append(v)
+                    break
+    r = np.reshape(np.array(result), dimensions)
+    for x in r:
+        print(x)
+
+    return {'part1': len(ones) * len(twos)}
+
+
+def day7(opcodes=None):
+    if not opcodes:
+        opcodes = input('day7.txt')[0]
+
+    phases = it.permutations('01234')
+    results = []
+    for o in phases:
+        i = 0
+        for p in o:
+            i = day5([int(p), i], opcodes)
+        results.append(i)
+
+    return max(results)
+
+
+def day6(planets=None):
+    if not planets:
+        planets = input('day6.txt')
+
+    p = [x.split(')') for x in planets]
+    orbits = [['COM']]
+
+    def plot(orbits, planets):
+        neworbits = [['COM']]
+        for a, b in planets:
+            for o in orbits:
+                if a == o[0] and 'COM' in o:
+                    neworbits.append([b] + o)
+        return neworbits
+
+    x = 0
+    while len(orbits) > x:
+        x = len(orbits)
+        orbits = plot(orbits, p)
+    l = sum([len(o) - 1 for o in orbits])
+
+    y = [o[:] for o in orbits if "YOU" in o][0]
+    s = [o[:] for o in orbits if "SAN" in o][0]
+    c = [x for x in y if x in s]
+    d = y.index(c[0]) + s.index(c[0]) - 2
+
+    return {'part1': l, 'part2': d}
+
+
+def day5(inputs, opcodes=None):
     if not opcodes:
         opcodes = input('day5.txt')[0]
 
@@ -24,21 +118,12 @@ def day5(sysid, opcodes=None):
     i = 0
     result = 0
 
-    def getints(ops, params, modes):
-        results = []
-        for p, m in zip(params, modes):
-            if m == "0":
-                results.append(ops[p])
-            if m == "1":
-                results.append(p)
-        return results
-
     while True:
         o = str(ops[i])
         if o[-2:] == "99":
             break
         if o[-1] == "3":
-            ops[ops[i + 1]] = sysid
+            ops[ops[i + 1]] = inputs.pop(0)
             i += 2
         if o[-1] == "4":
             if o[0] == "1":
