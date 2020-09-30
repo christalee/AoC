@@ -18,6 +18,7 @@
 import collections
 import hashlib
 import itertools
+import math
 import operator
 import re
 import string
@@ -34,6 +35,180 @@ def input(filename: str):
     return data
 
 
+def day23(commands=None):
+    p1 = {"a": 0, "b": 0}
+    p2 = {"a": 1, "b": 0}
+    if not commands:
+        commands = input("day23.txt")
+
+    # 'hlf r' sets register r to half its current value
+    # 'tpl r' sets register r to triple its current value
+    # 'inc r' increments register r, adding 1 to it
+    # 'jmp offset' is a jump; it continues with the instruction offset away relative to itself.
+    # 'jie r', offset is like jmp, but only jumps if register r is even ("jump if even").
+    # 'jio r', offset is like jmp, but only jumps if register r is 1 ("jump if one", not odd).
+    def assemble(reg):
+        i = 0
+        while i < len(commands):
+            c = commands[i].split(' ')
+            if c[0] == 'hlf':
+                reg[c[1]] = reg[c[1]] / 2
+                i += 1
+            if c[0] == 'tpl':
+                reg[c[1]] = reg[c[1]] * 3
+                i += 1
+            if c[0] == 'inc':
+                reg[c[1]] += 1
+                i += 1
+            if c[0] == 'jmp':
+                i += int(c[1])
+            if c[0] == 'jie':
+                if reg[c[1].strip(',')] % 2 == 0:
+                    i += int(c[2])
+                else:
+                    i += 1
+            if c[0] == 'jio':
+                if reg[c[1].strip(',')] == 1:
+                    i += int(c[2])
+                else:
+                    i += 1
+
+        return reg
+
+    return {"part1": assemble(p1)["b"], "part2": assemble(p2)["b"]}
+
+
+def day21():
+    boss = {'HP': 103, "damage": 9, "armor": 2}
+    player = {}
+    weapons = ["Weapons:    Cost  Damage  Armor",
+               "Dagger        8     4       0",
+               "Shortsword   10     5       0",
+               "Warhammer    25     6       0",
+               "Longsword    40     7       0",
+               "Greataxe     74     8       0"]
+
+    armor = ["Armor:      Cost  Damage  Armor",
+             "Leather      13     0       1",
+             "Chainmail    31     0       2",
+             "Splintmail   53     0       3",
+             "Bandedmail   75     0       4",
+             "Platemail   102     0       5"]
+
+    rings = ["Rings:      Cost  Damage  Armor",
+             "Damage+1    25     1       0",
+             "Damage+2    50     2       0",
+             "Damage+3   100     3       0",
+             "Defense+1   20     0       1",
+             "Defense+2   40     0       2",
+             "Defense+3   80     0       3"]
+
+    def parse(tsv):
+        splits = []
+        for row in tsv:
+            splits.append(row.split())
+        return pd.DataFrame(splits[1:], columns=splits[0]).set_index(splits[0][0])
+
+    # Damage is max(1, attacker_damage - defender_armor)
+    def attack(p1, p2):
+        return max(1, p1["damage"] - p2["armor"])
+
+    # Player goes 1st
+    def battle(player, boss):
+        player["attack"] = attack(player, boss)
+        boss["attack"] = attack(boss, player)
+        while player["HP"] > 0:
+            #         print("Player: " + str(player["HP"]) + ", Boss: " + str(boss["HP"]))
+            boss["HP"] -= player["attack"]
+            if boss["HP"] > 0:
+                player["HP"] -= boss["attack"]
+            else:
+                return "Boss"
+        return "Player"
+
+    none = pd.DataFrame({"None": {"Cost": "0", "Damage": "0", "Armor": "0"}}).transpose()
+    weapons = parse(weapons)
+    armor = pd.concat([parse(armor), none])
+    rings = pd.concat([parse(rings), none])
+    ring_combos = list(itertools.combinations(rings.index, 2))
+
+    outcomes = []
+    for w in weapons.index:
+        for a in armor.index:
+            for r in ring_combos:
+                # there must be a better way to write these
+                cost = sum(map(int, [weapons.loc[(w, "Cost")], armor.loc[(a, "Cost")], rings.loc[r[0], "Cost"], rings.loc[r[1], "Cost"]]))
+                player["damage"] = sum(map(int, [weapons.loc[(w, "Damage")], armor.loc[(a, "Damage")], rings.loc[r[0], "Damage"], rings.loc[r[1], "Damage"]]))
+                player["armor"] = sum(map(int, [weapons.loc[(w, "Armor")], armor.loc[(a, "Armor")], rings.loc[r[0], "Armor"], rings.loc[r[1], "Armor"]]))
+
+                player["HP"] = 100
+                boss["HP"] = 103
+
+                outcomes.append([cost, w, a, r, battle(player, boss)])
+
+    results = {}
+
+    victories = [x for x in outcomes if x[-1] == "Boss"]
+    victories.sort()
+    results['part1'] = victories[0][0]
+
+    losses = [x for x in outcomes if x[-1] == "Player"]
+    losses.sort(reverse=True)
+    results['part2'] = losses[0][0]
+
+    return results
+
+
+def day20():
+    def p1_elves(n):
+        visits = set()
+        for i in range(1, math.ceil(n / 2) + 1):
+            if n % i == 0:
+                visits.update([i, int(n / i)])
+
+        return sum(visits) * 10
+
+    def p2_elves(n):
+        visits = set()
+        for i in range(1, math.ceil(n / 2) + 1):
+            if n % i == 0:
+                if n <= 50 * i:
+                    visits.add(i)
+                if n <= 50 * int(n / i):
+                    visits.add(int(n / i))
+
+        return sum(visits) * 11
+
+    results = {}
+    for n in range(750000, 800000):
+        if p1_elves(n) >= 33100000:
+            results["part1"] = n
+        if p2_elves(n) >= 33100000:
+            results["part2"] = n
+
+    return results
+
+
+def day19_part1(subs=None, molecule=None):
+    if not subs:
+        i = input("day19.txt")
+        molecule = i[-1]
+        s = [x.split(" => ") for x in i[-2]]
+    else:
+        s = [x.split(" => ") for x in subs]
+
+    results = []
+    for x in range(0, len(molecule)):
+        n = molecule[x:]
+        p = molecule[:x]
+        for sub in s:
+            results.append(p + n.replace(sub[0], sub[1], 1))
+
+    while molecule in results:
+        results.remove(molecule)
+    return len(set(results))
+
+
 def day18_neighbors(point, lights):
     n = []
     for x in [point[0] - 1, point[0], point[0] + 1]:
@@ -47,6 +222,9 @@ def day18_neighbors(point, lights):
 
 
 def day18_part2(cycles, lights=None):
+
+    # Part 2: Obviously, this is Conway's Game of Life, or it would be except that 4 lights are stuck on, one in each corner. How many lights are on after 100 cycles of this defective grid?
+
     if not lights:
         lights = input('day18.txt')
     lights = np.array(list(map(list, lights)))
@@ -79,6 +257,14 @@ def day18_part2(cycles, lights=None):
 
 
 def day18_part1(cycles, lights=None):
+
+    # Part 1: You have a grid of 100x100 lights, which start with some on and some off. Each light turns on or off based on its neighbors:
+
+    # - a light which is on will stay on if 2 or 3 of its neighbors are on, otherwise it will turn off
+    # - a light which is off will turn on if exactly 3 neighbors are on, otherwise it will stay off
+
+    # Lights at the edge of the grid have fewer than 8 neighbors. All lights update at the same time, using the same current state. How many lights are on after 100 steps?
+
     if not lights:
         lights = input('day18.txt')
     lights = np.array(list(map(list, lights)))
@@ -107,6 +293,11 @@ def day18_part1(cycles, lights=None):
 
 
 def day17(eggnog, containers=None):
+
+    # Part 1: Given a list of container sizes, how many combinations will hold 150L of eggnog? Containers must be filled completely.
+
+    # Part 2: How many valid combinations are there with the minimum number of containers?
+
     if not containers:
         containers = list(map(int, input("day17.txt")))
 
@@ -120,6 +311,11 @@ def day17(eggnog, containers=None):
 
 
 def day16():
+
+    # Part 1: You need to figure out which one of your 500 Aunts Sue sent you a gift. Luckily, you have a machine to detect the presence of various scents and a list of what you recall about each Aunt. If the list doesn't mention it, that doesn't mean that Aunt doesn't have it, just that you don't recall.
+
+    # Part 2: Rereading the instruction manual, you realize the machine results are ranges in some cases: there are more cats and trees than indicated, and fewer pomeranians and goldfish. Now which Aunt Sue is the best match?
+
     target = {"children": 3,
               "cats": 7,
               "samoyeds": 2,
@@ -156,10 +352,29 @@ def day16():
     results = {}
     results["part1"] = collections.Counter(part1).most_common(1)[0][0]
     results["part2"] = collections.Counter(part2).most_common(1)[0][0]
+
     return results
 
 
 def day15(text=None):
+
+    # Part 1: You're baking cookies, and want to find the best recipe. Each ingredient in your kitchen has a different value for capacity, durability, flavor, texture, and calories. The best cookie will be scored by the product of the sums of the products of each ingredient's properties and its quantity, which must add up to 100. If any property gives a negative sum, it contributes 0. To begin with, ignore calories. For example:
+
+    # Butterscotch: capacity -1, durability -2, flavor 6, texture 3, calories 8
+    # Cinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3
+
+    # A mixture of 44 tsp. Butterscotch and 56 tsp. Cinnamon results in:
+    # capacity: 44*-1 + 56*2 = 68
+    # durability: 44*-2 + 56*3 = 80
+    # flavor: 44*6 + 56*-2 = 152
+    # texture: 44*3 + 56*-1 = 76
+
+    # The total score for this recipe is 68 * 80 * 152 * 76 = 62842880.
+
+    # Given your actual ingredients, what is the score of the highest-scoring cookie you can bake?
+
+    # Part 2: What is the score of the highest-scoring cookie with a calorie count of exactly 500?
+
     if not text:
         text = input('day15.txt')
 
@@ -193,6 +408,9 @@ def day15(text=None):
 
 
 def day14_part2(time, text=None):
+
+    # Part 2: The scoring system has been changed, so that the reindeer(s) in the lead at the end of every second get a point. After 2503 seconds, how many points does the winning reindeer have?
+
     if not text:
         text = input("day14.txt")
 
@@ -226,6 +444,9 @@ def day14_part2(time, text=None):
 
 
 def day14_part1(time, text=None):
+
+    # Part 1: It's the Reindeer Olympics! You have a list of reindeer stats, summarizing how fast they travel for how long, and how long they have to rest before they can travel again. After 2503 seconds, how far has the winning reindeer travelled?
+
     if not text:
         text = input("day14.txt")
 
@@ -255,6 +476,9 @@ def day14_part1(time, text=None):
 
 def day13_part2(relations=None):
     # TODO: make this more elegant
+
+    # Part 2: You forgot to seat yourself at the table! You're pretty apathetic about the whole situations, thought, so you have a change in happiness of zero for all pairings, and vice versa. What is the total change in happiness for the best arrangement now?
+
     if not relations:
         relations = input("day13.txt")
 
@@ -267,6 +491,9 @@ def day13_part2(relations=None):
 
 
 def day13_part1(relations=None):
+
+    # Part 1: You are determining the seating arrangement for dinner by optimizing for the total happiness of the guests. You have a list giving the loss or gain for each pair of diners. What is the total change in happiness for the best arrangement?
+
     if not relations:
         relations = input("day13.txt")
 
@@ -299,6 +526,9 @@ def day13_part1(relations=None):
 
 
 def day12(json=None):
+
+    # Part 1: Given a JSON blob containing object, arrays, numbers, and strings, what is the sum of all the numbers?
+
     if not json:
         json = input("day12.txt")
 
@@ -318,6 +548,17 @@ def day11_alpha_inc(s):
 
 
 def day11(pw=None):
+
+    # Part 1: Santa is creating a new password by incrementing his previous password until it passes the following criteria:
+
+    # - must include at least one sequence of consecutive increasing letters, like 'abc' or 'def', not 'abd'
+    # - must not include 'i', 'o', or 'l'
+    # - must contain at least 2 different pairs of letters, like 'bbazz'
+
+    # Given the current password, what is the next valid password? Increment alphabetically, wrapping around at z, e.g. bb, bc, bd...xx, xy, xz, ya, yb...
+
+    # Part 2: What is the next valid password after the one you found in Part 1?
+
     if not pw:
         pw = 'aaaaaaaa'
     ab = string.ascii_lowercase
@@ -331,6 +572,17 @@ def day11(pw=None):
 
 
 def day10(i: int, digits: str = '1113122113'):
+
+    # Part 1: Given an initial string, the next string consists of the spoken description of that string.
+
+    # - 1 expands to "one 1" -> 11
+    # - 11 expands to "two 1s" -> 21
+    # - 21 expands to "one 2, one 1" -> 1211
+
+    # After 40 cycles, how long is the result?
+
+    # Part 2: How long is the resulting number after 50 cycles?
+
     while i > 0:
         numerals: List[str] = []
         while len(digits) > 0:
@@ -347,6 +599,11 @@ def day10(i: int, digits: str = '1113122113'):
 
 
 def day9(distances=None):
+
+    # Part 1: Given a list of cities and the distances between them, what is the shortest distance you can travel, visiting each city exactly once? You may start anywhere (and end somewhere else).
+
+    # Part 2: What is the longest trip that visits each city exactly once?
+
     if not distances:
         distances = input('day9.txt')
 
@@ -386,11 +643,17 @@ def day9(distances=None):
 
 # TODO change these all to re.sub / skip the if clauses
 def day8(strings=None):
+
     if not strings:
         with open('input_2015/day8.txt', 'r') as input:
             strings = input.read().split()
 
     raw = sum(map(len, strings))
+
+    # Part 1: Given a string containing escaped literals (\\, \", \x27), what is the difference between the number of characters in the code and the number of characters in the rendered string?
+    # - "" is 2 characters in code but 0 as a string
+    # - "aaa\"aaa" is 10 characters in code but 7 as a string
+    # - "\x27" is 6 characters in code but only 1 as a string (hex-encoded ASCII)
 
     def decode(strings):
         decoded = 0
@@ -406,6 +669,11 @@ def day8(strings=None):
             decoded += len(t)
 
         return raw - decoded
+
+    # Part 2: Now go the other way, and encode each string by escaping each backslash and quotation mark. What is the difference in the number of characters in the encoded strings and the originals?
+    # - "" encodes to "\"\"" for a total of 6 characters
+    # - "aaa\"aaa" encodes to "\"aaa\\\"aaa\"" for a total of 16
+    # - "\x27" encodes to "\"\\x27\"" for a total of 11
 
     def encode(strings):
         encoded = 0
@@ -423,6 +691,18 @@ def day8(strings=None):
 
 
 def day7(instructions=None):
+
+    # Part 1: You are given a set of instructions to assemble a set of logic gates.
+
+    # - 123 -> x means that the signal 123 is provided to wire x.
+    # - x AND y -> z means that the bitwise AND of wire x and wire y is provided to wire z; x OR y -> z uses the bitwise OR
+    # - p LSHIFT 2 -> q means that the value from wire p is left-shifted by 2 and then provided to wire q. RSHIFT is the same but with right-shifting
+    # - NOT e -> f means that the bitwise complement of the value from wire e is provided to wire f.
+
+    # Each wire can hold a value from 0 to 65535; every input must be provided to a gate before it produces any output. What value is ultimately held on wire a?
+
+    # Part 2: Take the signal that arrived on wire a, set wire b to that value, and reset all the other wires (including a). Now what value is held on wire a?
+
     # For part 1, replace line 1 of day7.txt with '1674 -> b'
     if not instructions:
         instructions = input('day7.txt')
@@ -476,30 +756,26 @@ def day7(instructions=None):
     return wires
 
 
-def day6_part2(instructions: Optional[List[str]] = None) -> int:
-    lights = np.zeros((1000, 1000), dtype=int)
+def day6(instructions: Optional[List[str]] = None) -> int:
 
-    if not instructions:
-        instructions = input('day6.txt')
+    # Part 1: You have a grid of 1000x1000 lights and instructions to turn them on:
 
-    for i in instructions:
-        pieces = i.split()
-        start = list(map(int, pieces[-3].split(',')))
-        end = list(map(int, pieces[-1].split(',')))
+    # - turn on 0,0 through 999,999 means to turn on / leave on every light in the rectangle between those coordinates, inclusive
+    # - toggle 0,0 through 999,0 means to flip every light in the first row
+    # - turn off 499,499 through 500,500 would turn off the middle 4 lights
 
-        if pieces[1] == 'on':
-            lights[start[0]:end[0] + 1, start[1]:end[1] + 1].__iadd__(1)
-        if pieces[1] == 'off':
-            lights[start[0]:end[0] + 1, start[1]:end[1] + 1].__isub__(1)
-            np.clip(lights, 0, None, out=lights)
-        if pieces[0] == 'toggle':
-            lights[start[0]:end[0] + 1, start[1]:end[1] + 1].__iadd__(2)
+    # After following all the directions in order, how many lights are turned on?
 
-    return np.sum(lights)
+    # Part 2: In fact, you have mistranslated the directions. The lights have a brightness setting, starting at zero. The actual instructions are:
 
+    # - turn on means to increase the brightness by 1
+    # - turn off means to decrease the brightness by 1
+    # - toggle means to increase the brightness by 2
 
-def day6_part1(instructions: Optional[List[str]] = None) -> int:
-    lights = np.zeros((1000, 1000), dtype=int)
+    # What is the total brightness of all the lights after executing all the instructions?
+
+    part1 = np.zeros((1000, 1000), dtype=int)
+    part2 = np.zeros((1000, 1000), dtype=int)
 
     if not instructions:
         instructions = input('day6.txt')
@@ -511,35 +787,38 @@ def day6_part1(instructions: Optional[List[str]] = None) -> int:
         # target = [start[0]:end[0]+1, start[1]:end[1]+1]
 
         if pieces[1] == 'on':
-            lights[start[0]:end[0] + 1, start[1]:end[1] + 1] = 1
+            part1[start[0]:end[0] + 1, start[1]:end[1] + 1] = 1
+            part2[start[0]:end[0] + 1, start[1]:end[1] + 1].__iadd__(1)
         if pieces[1] == 'off':
-            lights[start[0]:end[0] + 1, start[1]:end[1] + 1] = 0
+            part1[start[0]:end[0] + 1, start[1]:end[1] + 1] = 0
+            part2[start[0]:end[0] + 1, start[1]:end[1] + 1].__isub__(1)
+            np.clip(part2, 0, None, out=part2)
         if pieces[0] == 'toggle':
-            lights[start[0]:end[0] + 1, start[1]:end[1] + 1] = np.bitwise_xor(lights[start[0]:end[0] + 1, start[1]:end[1] + 1], 1)
+            part1[start[0]:end[0] + 1, start[1]:end[1] + 1] = np.bitwise_xor(part1[start[0]:end[0] + 1, start[1]:end[1] + 1], 1)
+            part2[start[0]:end[0] + 1, start[1]:end[1] + 1].__iadd__(2)
 
-    return np.sum(lights)
+    return {"part1": np.sum(part1), "part2": np.sum(part2)}
 
 
-def day5_part2(strings: Optional[List[str]] = None) -> int:
+def day5(strings: Optional[List[str]] = None) -> int:
+
+    # Part 1: Given a list of strings, how many satisfy the following requirements:
+
+    # - contains at least 3 vowels (aeiou)
+    # - contains at least one letter twice in a row (xx, abccde)
+    # - does not contain the strings 'ab', 'cd', 'pq', 'xy'
+
+    # Part 2: How many strings satisfy these requirements:
+
+    # - contains a non-overlapping pair of any two letters at least twice (xyxy, aabcdefaa, but not aaa which overlaps)
+    # - contains at least one letter which repeats with one letter between them (xyx, abcdefegh, aaa)
+
     if not strings:
         strings = input('day5.txt')
 
-    results: List[bool] = []
-    for s in strings:
-        nice = False
-        if re.search(r'(\w)\w\1', s) and re.search(r'(\w{2}).*\1', s):
-            nice = True
+    part1: List[bool] = []
+    part2: List[bool] = []
 
-        results.append(nice)
-
-    return results.count(True)
-
-
-def day5_part1(strings: Optional[List[str]] = None) -> int:
-    if not strings:
-        strings = input('day5.txt')
-
-    results: List[bool] = []
     for s in strings:
         nice = False
         if re.search(r'([aeiou].*){3}', s) and re.search(r'(\w)\1', s):
@@ -547,12 +826,23 @@ def day5_part1(strings: Optional[List[str]] = None) -> int:
         if re.search(r'(ab|cd|pq|xy)', s):
             nice = False
 
-        results.append(nice)
+        part1.append(nice)
 
-    return results.count(True)
+        nice = False
+        if re.search(r'(\w)\w\1', s) and re.search(r'(\w{2}).*\1', s):
+            nice = True
+
+        part2.append(nice)
+
+    return {"part1": part1.count(True), "part2": part2.count(True)}
 
 
 def day4(key: str = 'yzbqklnj') -> int:
+
+    # Part 1: Given an initial key, find the lowest number which produces an MD5 hash with at least 5 leading zeros, when the number is appended to the key.
+
+    # Part 2: Find the lowest number which produces a hash with 6 leading zeros.
+
     i: int = 1
     found: bool = False
 
@@ -567,6 +857,9 @@ def day4(key: str = 'yzbqklnj') -> int:
 
 
 def day3_part2(arrows: Optional[str] = None) -> int:
+
+    # Part 2: What if there are two Santas giving gifts, following every other direction? How many houses receive gifts this year?
+
     if not arrows:
         with open('input_2015/day3.txt', 'r') as input:
             arrows = input.read()
@@ -600,6 +893,9 @@ def day3_part2(arrows: Optional[str] = None) -> int:
 
 
 def day3_part1(arrows: Optional[str] = None) -> int:
+
+    # Part 1: Given a list of directions indicating each move (^, v, >, <), starting at the origin of an infinite grid, how many houses receive at least one present?
+
     if not arrows:
         with open('input_2015/day3.txt', 'r') as input:
             arrows = input.read()
@@ -627,6 +923,11 @@ def day3_part1(arrows: Optional[str] = None) -> int:
 
 
 def day2(box_list: Optional[List[str]] = None) -> Dict[str, int]:
+
+    # Part 1: Given a list of box dimensions, how much wrapping paper is required? Each box requires enough paper to cover its sides (l*w + w*h + h*l), plus the area of the smallest side.
+
+    # Part 2: How much ribbon is required? For each gift, the ribbon must go around the smallest perimeter (if h and w are the smallest edges, 2*(h+w)) plus a bow equal to the volume of the box (l*w*h).
+
     if not box_list:
         box_list = input('day2.txt')
 
@@ -649,10 +950,14 @@ def day2(box_list: Optional[List[str]] = None) -> Dict[str, int]:
 
 
 def day1(parens: Optional[str] = None) -> Dict[str, Union[int, List[int]]]:
+
+    # Part 1: Given a set of instructions, where '(' means go up one floor, and ')' means go down one floor, what floor do you end up on? You start on floor 0.
+
     if not parens:
         with open('input_2015/day1.txt', 'r') as input:
             parens = input.read()
 
+    # floor = parens.count('(') - parens.count(')')
     floor: int = 0
     basement: List[int] = []
 
@@ -661,12 +966,15 @@ def day1(parens: Optional[str] = None) -> Dict[str, Union[int, List[int]]]:
             floor += 1
         if p == ')':
             floor -= 1
+        # if you reach the basement, make a note
         if floor == -1:
             basement.append(i + 1)
 
-    # floor = parens.count('(') - parens.count(')')
+    # Part 2: What is the position of the first instruction that causes you to enter the basement?
+
     if len(basement) > 0:
         b = basement[0]
     else:
         b = 0
+
     return {'floor': floor, 'basement': b}
