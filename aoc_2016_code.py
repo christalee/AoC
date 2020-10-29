@@ -291,8 +291,7 @@ def day19(size=3001330):
     #         if r in p2:
     #             x = p2.index(r)
     #             p2.pop((x + math.floor(len(p2) / 2)) % len(p2))
-    #             if r == p2[x - 2]:
-    #                 break
+
 
     # I tried speeding up execution with threading or multiprocessing, but
     # concluded that the computation is CPU-bound and modifies a single massive
@@ -434,7 +433,9 @@ def day17(seed='yjjvjgan'):
 
     # TODO review vs. day13, day24
 
-    # This does the bulk of the work: hashing, determining which doors are open/closed, checking for walls, and adding the path to deadends if no doors are open.
+    # This does the bulk of the work: hashing, determining which doors are
+    # open/closed, checking for walls, and adding the path to deadends if no
+    # doors are open.
     def doorfind(steps):
         path, location = steps
         m = hashlib.md5()
@@ -479,7 +480,9 @@ def day17(seed='yjjvjgan'):
 
         return options
 
-    # This adds paths to results if they reach the goal [3, 3], and otherwise accumulates possible next steps. Any deadend path contributes nothing to newpaths.
+    # This adds paths to results if they reach the goal [3, 3], and otherwise
+    # accumulates possible next steps. Any deadend path contributes nothing to
+    # newpaths.
     def pathfind(paths):
         newpaths = []
         for p in paths:
@@ -1402,7 +1405,8 @@ def day2(keys=None):
                 if str(next) in keypad:
                     location = copy.deepcopy(next)
 
-            # After each set of directions has been processed, add the current key to the keycode
+            # After each set of directions has been processed,
+            # add the current key to the keycode
             keycode += keypad[str(location)]
 
         return keycode

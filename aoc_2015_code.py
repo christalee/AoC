@@ -542,7 +542,7 @@ def day13_part2(relations=None):
     # TODO: make this more elegant
 
     # Part 2: You forgot to seat yourself at the table! You're pretty apathetic
-    # about the whole situations, thought, so you have a change in happiness of
+    # about the whole situation, though, so you have a change in happiness of
     # zero for all pairings, and vice versa. What is the total change in
     # happiness for the best arrangement now?
 
