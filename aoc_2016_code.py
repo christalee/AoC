@@ -29,18 +29,26 @@ def input(filename: str) -> List[str]:
     return data
 
 # day25 - see day25.ipynb for details
-# Problem: using the assembler from day23, find the lowest positive integer that will produce a clock signal (0, 1, 0, 1...) when input as register a.
 
-# Solution: This problem has no tgl instructions, but it adds an 'output x' that sends x to the antenna. Collecting 100 samples of signal in a list allows me to test a range of inputs and check the output against the desired [0, 1] * 50; maybe not the most elegant but it does work.
+# Problem: using the assembler from day23, find the lowest positive integer that
+# will produce a clock signal (0, 1, 0, 1...) when input as register a.
+
+# Solution: This problem has no tgl instructions, but it adds an 'output x' that
+# sends x to the antenna. Collecting 100 samples of signal in a list allows me
+# to test a range of inputs and check the output against the desired [0, 1] *
+# 50; maybe not the most elegant but it does work.
 
 # TODO translate all this assembly into the corresponding loops and operations
 
 
 def day24(raw=None):
 
-    # Part 1: given a maze and a robot that can only move in x and y, what is the least number of steps required to visit all the goals (marked with integers), starting from location 0?
+    # Part 1: given a maze and a robot that can only move in x and y, what is
+    # the least number of steps required to visit all the goals (marked with
+    # integers), starting from location 0?
 
-    # Part 2: What is the least number of steps required to visit all the goals and then return to location 0?
+    # Part 2: What is the least number of steps required to visit all the goals
+    # and then return to location 0?
 
     # Another pathfinding problem, hooray
     # First, draw the map and locate all the goal locations
@@ -118,25 +126,44 @@ def day24(raw=None):
     return {'part1': trips[t[0]], 'part2': rounds[r[0]]}
 
 # day23 - see day23.ipynb for details
-# Problem: given a set of assembly instructions, similar to those in day12, what value is left in register a for an input value of a = 7? a = 12?
 
-# Solution: This problem adds a 'tgl x' instruction that flips the instruction x away ('inc' -> 'dec', 'dec' -> 'inc', 'tgl' -> 'inc', 'cpy' -> 'jnz', 'jnz' -> 'cpy'). After implementing that and inspecting the register periodically for a range of input values, I noticed the instructions calculate factorial(a) + 85*76. This is quite slow & expensive for a = 12, since 'inc' is the only operation available, so a closed-form solution is preferable by far.
+# Problem: given a set of assembly instructions, similar to those in day12, what
+# value is left in register a for an input value of a = 7? a = 12?
+
+# Solution: This problem adds a 'tgl x' instruction that flips the instruction x
+# away ('inc' -> 'dec', 'dec' -> 'inc', 'tgl' -> 'inc', 'cpy' -> 'jnz', 'jnz' ->
+# 'cpy'). After implementing that and inspecting the register periodically for a
+# range of input values, I noticed the instructions calculate factorial(a) +
+# 85*76. This is quite slow & expensive for a = 12, since 'inc' is the only
+# operation available, so a closed-form solution is preferable by far.
 
 # TODO translate all this assembly into the corresponding loops and operations
 
 # day22 - see day22.ipynb for details
-# Part 1: Given the disk space Used/Available for each node in a massive storage cluster, how many pairs of nodes exist in the grid, such that the current contents of node A could fit on node B if it were empty?
 
-# Solution: I parsed the input into a pandas DataFrame to facilitate further calculation. From there, it was straightforward (though slow) to count up each pair of nodes which met the stated criteria.
+# Part 1: Given the disk space Used/Available for each node in a massive storage
+# cluster, how many pairs of nodes exist in the grid, such that the current
+# contents of node A could fit on node B if it were empty?
 
-# Part 2: You would like to transfer all the data from the top right node to the top left node. Unfortunately there's only 1 node currently empty, and some nodes are so large/full they're effectively unmoveable. What is the smallest number of transfers required to move the data?
+# Solution: I parsed the input into a pandas DataFrame to facilitate further
+# calculation. From there, it was straightforward (though slow) to count up each
+# pair of nodes which met the stated criteria.
 
-# Solution: This was simplest to solve by inspection; I printed the maze, with each node symbolized by a '.' for regular nodes, '*' for unmoveable nodes, and '_' for the empty node. Then I could easily count how many steps were needed to reach the top row and move the data from one end to the other.
+# Part 2: You would like to transfer all the data from the top right node to the
+# top left node. Unfortunately there's only 1 node currently empty, and some
+# nodes are so large/full they're effectively unmoveable. What is the smallest
+# number of transfers required to move the data?
+
+# Solution: This was simplest to solve by inspection; I printed the maze, with
+# each node symbolized by a '.' for regular nodes, '*' for unmoveable nodes, and
+# '_' for the empty node. Then I could easily count how many steps were needed
+# to reach the top row and move the data from one end to the other.
 
 
 def day21(pw=None, commands=None):
 
-    # Part 1: Given an input string and a set of scrambling instructions, what is the resulting output?
+    # Part 1: Given an input string and a set of scrambling instructions, what is
+    # the resulting output?
 
     if not pw:
         pw = 'abcdefgh'
@@ -144,12 +171,14 @@ def day21(pw=None, commands=None):
         commands = input('day21.txt')
 
     # Commands:
-    # 'swap position X with position Y' swaps the letters at indices X and Y
-    # 'swap letter X with letter Y'
-    # 'rotate left/right X steps'
-    # 'rotate based on position of letter X' means find the index of X, add 1, and if the result is > 4, add 1 again. Then rotate right that many steps.
-    # 'reverse positions X through Y' means reverse the substring from indices X to Y
-    # 'move position X to position Y' means remove the letter at index X and insert it at index Y
+    # - 'swap position X with position Y' swaps the letters at indices X and Y
+    # - 'swap letter X with letter Y'
+    # - 'rotate left/right X steps'
+    # - 'rotate based on position of letter X' means find the index of X, add 1,
+    # and if the result is > 4, add 1 again. Then rotate right that many steps.
+    # - 'reverse positions X through Y' means reverse the substring from indices X to Y
+    # - 'move position X to position Y' means remove the letter at index X and
+    # insert it at index Y
 
     def scramble(text):
         letters = list(text)
@@ -193,9 +222,11 @@ def day21(pw=None, commands=None):
 
         return ''.join(letters)
 
-    # Part 2: Given an output string that has already been scrambled, what was the input string?
+    # Part 2: Given an output string that has already been scrambled, what was the
+    # input string?
 
-    # Solution: The simplest way to handle this was to scramble all the possible input strings and check which one gave the requested output.
+    # Solution: The simplest way to handle this was to scramble all the possible
+    # input strings and check which one gave the requested output.
 
     pws = itertools.permutations('abcdefgh')
     for p in pws:
@@ -207,7 +238,8 @@ def day21(pw=None, commands=None):
 
 def day20(blocked=None):
 
-    # Problem: given a list of blacklisted IP ranges, written as 32-bit integers, what is the lowest-valued IP that is not blocked? How many IPs are allowed?
+    # Problem: given a list of blacklisted IP ranges, written as 32-bit integers,
+    # what is the lowest-valued IP that is not blocked? How many IPs are allowed?
 
     # Solution: Start by parsing the input into a sorted list of ranges.
 
@@ -216,7 +248,9 @@ def day20(blocked=None):
     blocked = [list(map(int, x.split('-'))) for x in blocked]
     blocked.sort()
 
-    # Keep track of the lowest integer that's excluded from each range (greater than the end of the range). Append any IPs between that lowest IP and the bottom of the next range to the list of allowed IPs.
+    # Keep track of the lowest integer that's excluded from each range (greater
+    # than the end of the range). Append any IPs between that lowest IP and the
+    # bottom of the next range to the list of allowed IPs.
 
     lowest = blocked[0][1] + 1
     allowed = []
@@ -231,11 +265,17 @@ def day20(blocked=None):
 
 def day19(size=3001330):
 
-    # Part 1: Imagine a circle of elves, numbered from 1, each holding a gift. Going around the circle in order, each elf steals a gift from the elf on their left. Any elf without a gift is removed from the circle. Which elf ends up with all the gifts?
+    # Part 1: Imagine a circle of elves, numbered from 1, each holding a gift.
+    # Going around the circle in order, each elf steals a gift from the elf on
+    # their left. Any elf without a gift is removed from the circle. Which elf
+    # ends up with all the gifts?
 
-    # Part 2: Imagine instead that the elves steal gifts from the elf directly across the circle from them, or the elf on the left (from the stealer's view) if there are two options. Now which elf ends up with all the gifts?
+    # Part 2: Imagine instead that the elves steal gifts from the elf directly
+    # across the circle from them, or the elf on the left (from the stealer's
+    # view) if there are two options. Now which elf ends up with all the gifts?
 
-    # Solution: First I solved this problem by walking the list, which was prohibitively slow for large n
+    # Solution: First I solved this problem by walking the list, which was
+    # prohibitively slow for large n
 
     # p1 = list(range(size))
     # while len(p1) > 1:
@@ -254,9 +294,14 @@ def day19(size=3001330):
     #             if r == p2[x - 2]:
     #                 break
 
-    # I tried speeding up execution with threading or multiprocessing, but concluded that the computation is CPU-bound and modifies a single massive data structure - I would have to chunk it manually. Along the way, I ran the above code for n from 2 to 50. Noticing a pattern in the output, I derived a formula for both results (see day19.ipynb to visualize)
+    # I tried speeding up execution with threading or multiprocessing, but
+    # concluded that the computation is CPU-bound and modifies a single massive
+    # data structure - I would have to chunk it manually. Along the way, I ran
+    # the above code for n from 2 to 50. Noticing a pattern in the output, I
+    # derived a formula for both results (see day19.ipynb to visualize)
 
-    # Part 1: 2^n = 1, then follow 2^n odd numbers (so the last is 2^n+1 - 1 : 2^n+1 - 1)
+    # Part 1: 2^n -> 1, then follow 2^n odd numbers (so the last is 2^(n+1) - 1 ->
+    # 2^(n+1) - 1)
     def part1(x):
         powers = [2**n for n in range(25)]
         odds = [1 + 2 * n for n in range(x)]
@@ -265,7 +310,8 @@ def day19(size=3001330):
         r = x - t[-1]
         return odds[r]
 
-    # Part 2: 1 : 1, if n : n then start 1, 2, 3 until n : n/2, then continue sequence of odds until n : n
+    # Part 2: 1 -> 1, if n -> n then start 1, 2, 3 until n -> n/2, then continue
+    # sequence of odds until n -> n
     def part2(x):
         odds = [1 + 2 * n for n in range(x)]
 
@@ -293,15 +339,23 @@ def day19(size=3001330):
 
 def day18(size, row=None):
 
-    # Problem: You face a room with many rows of tiles, some of which are safe (.) and some are traps (^). Given the layout of the first row, you can determine the layout of the next row by following the rules below. How many safe tiles are in a room with 40 rows? How many in a room with 400000 rows?
+    # Problem: You face a room with many rows of tiles, some of which are safe (.)
+    # and some are traps (^). Given the layout of the first row, you can determine
+    # the layout of the next row by following the rules below. How many safe tiles
+    # are in a room with 40 rows? How many in a room with 400000 rows?
 
     # Rules:
-    # For each tile, look at the tile in the prior row and the two adjacent to that tile. Call these tiles the left, center, and right tiles. A new tile is a trap if:
+    # For each tile, look at the tile in the prior row and the two adjacent to
+    # that tile. Call these tiles the left, center, and right tiles. A new tile
+    # is a trap if:
+
     #   - The left and center tiles are traps, but the right tile is not.
     #   - The center and right tiles are traps, but the left tile is not.
     #   - Only the left tile is a trap.
     #   - Only the right tile is a trap.
-    # The wall (end of each row) counts as safe; any tile that is not a trap per these rules is safe.
+
+    # The wall (end of each row) counts as safe; any tile that is not a trap per
+    # these rules is safe.
 
     if not row:
         row = input('day18.txt')
@@ -345,7 +399,12 @@ def day18(size, row=None):
 
 def day17(seed='yjjvjgan'):
 
-    # Problem: You are trapped in a 4x4 maze of rooms. At every step, the state of the doors in your current room are determined by the md5 hash of your puzzle input + your path so far (Up, Down, Left, Right). The first 4 characters of the hash correspond to the doors leading Up, Down, Left, and Right: open if the char is b-f, closed if a0-9. The walls of the maze have no doors, of course.
+    # Problem: You are trapped in a 4x4 maze of rooms. At every step, the state of
+    # the doors in your current room are determined by the md5 hash of your puzzle
+    # input + your path so far (Up, Down, Left, Right). The first 4 characters of
+    # the hash correspond to the doors leading Up, Down, Left, and Right: open if
+    # the char is b-f, closed if a0-9. The walls of the maze have no doors, of
+    # course.
 
     #########
     #S| | | #
@@ -359,9 +418,13 @@ def day17(seed='yjjvjgan'):
 
     # Part 1: What is the shortest path from the top left to the bottom right?
 
-    # Part 2: What is the length of the longest path that reaches the bottom right? Recall that once a path reaches the goal, all the doors open and the path ends.
+    # Part 2: What is the length of the longest path that reaches the bottom
+    # right? Recall that once a path reaches the goal, all the doors open and the
+    # path ends.
 
-    # Solution: Starting at [0, 0], accumulate a list of paths and their ending locations. If they reach the goal or deadend (all doors closed), add them to the appropriate list. Otherwise, keep stepping.
+    # Solution: Starting at [0, 0], accumulate a list of paths and their ending
+    # locations. If they reach the goal or deadend (all doors closed), add them
+    # to the appropriate list. Otherwise, keep stepping.
 
     path = ''
     location = [0, 0]
@@ -440,7 +503,9 @@ def day16(disk, seed=None):
     if not seed:
         seed = '11100010111110100'
 
-    # Problem: you need to generate random data to fill a disk and calculate its checksum. Given an initial seed value, what is the checksum for a disk of size 272? What is the checksum for a disk of size 35651584?
+    # Problem: you need to generate random data to fill a disk and calculate its
+    # checksum. Given an initial seed value, what is the checksum for a disk of
+    # size 272? What is the checksum for a disk of size 35651584?
 
     # First, generate data this way:
     # - Call the data you have at this point "a".
@@ -461,8 +526,10 @@ def day16(disk, seed=None):
 
     # Next, calculate the checksum this way:
     # - Break the data into pairs.
-    # - If the pair is two identical digits (11 or 00), the checksum digit is 1. If not (01 or 10), it's 0.
-    # - The result should be half the length of the initial data. If the length of the checksum is even, calculate its checksum.
+    # - If the pair is two identical digits (11 or 00), the checksum digit is 1.
+    # If not (01 or 10), it's 0.
+    # - The result should be half the length of the initial data. If the length
+    # of the checksum is even, calculate its checksum.
     # - Repeat until you have a checksum with an odd length.
 
     def checksum(a):
@@ -483,7 +550,11 @@ def day16(disk, seed=None):
 
 def day15():
 
-    # Problem: You have a machine of disks which rotate every second. You want to release a capsule at the top at the right time to pass through to the bottom. Each disk is 1s apart and has a slot at position 0. Given the initial positions and number of positions on each disk, at what time should you release the capsule?
+    # Problem: You have a machine of disks which rotate every second. You want
+    # to release a capsule at the top at the right time to pass through to the
+    # bottom. Each disk is 1s apart and has a slot at position 0. Given the
+    # initial positions and number of positions on each disk, at what time
+    # should you release the capsule?
 
     d1 = {'init': 1, 'rank': 1, 'mod': 13}
     d2 = {'init': 10, 'rank': 2, 'mod': 19}
@@ -496,7 +567,8 @@ def day15():
     p1 = [d1, d2, d3, d4, d5, d6]
     p2 = p1 + [d7]
 
-    # Solution: Track global time t. Code each disk's position mod the time. Update each position until every disk reads 0 at the same time.
+    # Solution: Track global time t. Code each disk's position mod the time.
+    # Update each position until every disk reads 0 at the same time.
     def check(disks):
         time = 0
         while True:
@@ -513,7 +585,12 @@ def day15():
 
 def day14(salt='zpqevtbw'):
 
-    # Problem: You are looking for 64 one-time pad keys. To find each key, determine the md5 hash of your input salt with an index that starts at 0 and increases each time. A key is valid if the lowercase hexadecimal representation of the md5 result contains 3 characters in a row AND a hash containing the same characters 5 times in a row occurs in the next 1000 hashes.
+    # Problem: You are looking for 64 one-time pad keys. To find each key,
+    # determine the md5 hash of your input salt with an index that starts at 0
+    # and increases each time. A key is valid if the lowercase hexadecimal
+    # representation of the md5 result contains 3 characters in a row AND a hash
+    # containing the same characters 5 times in a row occurs in the next 1000
+    # hashes.
 
     # Part 1: What index produces your 64th key?
     def gen_hash(y):
@@ -522,7 +599,8 @@ def day14(salt='zpqevtbw'):
 
         return m.hexdigest().lower()
 
-    # Part 2: instead of simply hashing once, hash 2016 additional times! Now what index produces your 64th key?
+    # Part 2: instead of simply hashing once, hash 2016 additional times! Now
+    # what index produces your 64th key?
     def stretch_hash(y):
         for i in range(2017):
             m = hashlib.md5()
@@ -546,7 +624,8 @@ def day14(salt='zpqevtbw'):
                 y = salt + str(x)
                 hashes[x] = hashfn(y)
 
-            # If a hash contains 3 or 5 of any char, store it in the appropriate subdict with index n as the key, with the char as the top-level key
+            # If a hash contains 3 or 5 of any char, store it in the appropriate
+            # subdict with index n as the key, with the char as the top-level key
             for n in hashes:
                 t = re.search(r'([a-f0-9])\1\1', hashes[n])
                 if t:
@@ -556,7 +635,8 @@ def day14(salt='zpqevtbw'):
                 if q:
                     quints[q.group()[0]][n] = hashes[n]
 
-            # For each index in triples[k], check for any index in quints[k] in the next 1000 ints
+            # For each index in triples[k], check for any index in quints[k] in
+            # the next 1000 ints
             for k in quints:
                 qvals = quints[k]
                 tvals = triples[k]
@@ -574,7 +654,8 @@ def day14(salt='zpqevtbw'):
 
 def day13(goal=(39, 31), seed=1350):
 
-    # Part 1: Given a map of a space defined by the function below, what is the shortest path from (1,1) to (31, 39)? You may not move diagonally.
+    # Part 1: Given a map of a space defined by the function below, what is the
+    # shortest path from (1,1) to (31, 39)? You may not move diagonally.
 
     # Part 2: How many locations (including (1, 1)) can you reach in 50 steps?
 
@@ -594,7 +675,8 @@ def day13(goal=(39, 31), seed=1350):
     h = g(seed)
     maze = np.array([[h(x, y) for x in range(60)] for y in range(60)])
 
-    # Solution: Keep a list of the farthest locations you can reach in d steps, and a list of locations you've already visited.
+    # Solution: Keep a list of the farthest locations you can reach in d steps,
+    # and a list of locations you've already visited.
 
     # Note: since numpy arrays are indexed as (row, column), goal is given as (y, x)
     frontier = [(1, 1)]
@@ -610,7 +692,8 @@ def day13(goal=(39, 31), seed=1350):
         if d == 50:
             points = len(visited)
 
-        # For each current location, return the number of steps d if you've reached the goal; otherwise, accumulate a list of possible next steps
+        # For each current location, return the number of steps d if you've
+        # reached the goal; otherwise, accumulate a list of possible next steps
         newborder = []
         for p in border:
             if p == goal:
@@ -618,12 +701,14 @@ def day13(goal=(39, 31), seed=1350):
             else:
                 newborder.extend(nextstep(p))
 
-        # Increment the number of steps d, add any new locations you've reached to visited, and deduplicate the next steps in newborder
+        # Increment the number of steps d, add any new locations you've reached
+        # to visited, and deduplicate the next steps in newborder
         d += 1
         visited = visited | set(newborder)
         return list(set(newborder))
 
-    # Given a point, return the adjacent points that are open (0), not a wall (-1) and haven't already been visited
+    # Given a point, return the adjacent points that are open (0), not a wall
+    # (-1), and haven't already been visited
     def nextstep(point):
         x, y = point
         around = [a for a in [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
@@ -639,7 +724,9 @@ def day13(goal=(39, 31), seed=1350):
 
 def day12(commands=None):
 
-    # Part 1: You are given a set of assembly instructions, operating on 4 registers initialized to 0. What value does register a hold when the instructions terminate?
+    # Part 1: You are given a set of assembly instructions, operating on 4
+    # registers initialized to 0. What value does register a hold when the
+    # instructions terminate?
 
     # Part 2: What value does register a hold if register c is initialized to 1?
 
@@ -650,12 +737,14 @@ def day12(commands=None):
     # 'cpy x y' copies x (either an integer or the value of a register) into register y.
     # 'inc x' increases the value of register x by one.
     # 'dec x' decreases the value of register x by one.
-    # 'jnz x y' jumps to an instruction y away (positive means forward; negative means backward), but only if x is not zero.
+    # 'jnz x y' jumps to an instruction y away (positive means forward; negative
+    # means backward), but only if x is not zero.
 
     if not commands:
         commands = input('day12.txt')
 
-    # Instructions are followed in order from the beginning until no more remain; use i to track progress through the list
+    # Instructions are followed in order from the beginning until no more remain;
+    # use i to track progress through the list
     def assemble(reg):
         i = 0
 
@@ -691,22 +780,30 @@ def day12(commands=None):
 
 def day11(floors=None):
 
-    # Problem: You are located on the 1st floor of a building containing various microchips and generators. How many moves will it take to transport all the chips and generators to the 4th floor, without frying any of the microchips?
+    # Problem: You are located on the 1st floor of a building containing various
+    # microchips and generators. How many moves will it take to transport all the
+    # chips and generators to the 4th floor, without frying any of the microchips?
 
     # Rules:
-    # - At all times, each floor can only contain all generators, all microchips, nothing, or a combination such that all microchips are with their corresponding generators. A generator may hang out without its microchip.
+    # - At all times, each floor can only contain all generators, all microchips,
+    # nothing, or a combination such that all microchips are with their
+    # corresponding generators. A generator may hang out without its microchip.
     # - The elevator only moves one floor at a time.
-    # - The elevator will only move at least one and no more than two generators or microchips.
+    # - The elevator will only move at least one and no more than two generators
+    # or microchips.
 
-    # Solution: represent state as a list containing an int for the elevator location and a list for each floor of the building.
+    # Solution: represent state as a list containing an int for the elevator
+    # location and a list for each floor of the building.
     # for best results, sort the initial state
 
+    # Initial state
     # F3:
     # F2: PG, PM, RG, RM
     # F1: UM, SM
     # F0: TG, TM, UG, SG, (EM, EG, DM, DG)
 
-    # Part 1 elements: elements: thulium (T), plutonium (U), strontium (S), promethium (P), ruthenium (R)
+    # Part 1 elements: elements: thulium (T), plutonium (U), strontium (S),
+    # promethium (P), ruthenium (R)
     p1 = [[0,
            ["SG", "TG", "TM", "UG"],
            ["SM", "UM"],
@@ -720,7 +817,8 @@ def day11(floors=None):
            ["PG", "PM", "RG", "RM"],
            []]]
 
-    # Given a list of 4 floors, confirm that it follows the rules for chips and generators
+    # Given a list of 4 floors, confirm that it follows the rules for chips and
+    # generators
     # TODO this could be more efficient, I think (or is the slowdown elsewhere?)
     def validate(state):
         checks = []
@@ -736,7 +834,8 @@ def day11(floors=None):
 
         return False not in checks
 
-    # Given a floor, return a list of lists containing its contents taken 1 or 2 at a time
+    # Given a floor, return a list of lists containing its contents taken 1 or 2
+    # at a time
     def taketwo(x):
         y = list(map(list, itertools.combinations(x, 2)))
         for i in x:
@@ -744,7 +843,8 @@ def day11(floors=None):
 
         return y
 
-    # Given a list of 4 floors and a list of items to move from start to end, return the updated list of floors (sorted, so states can be compared)
+    # Given a list of 4 floors and a list of items to move from start to end,
+    # return the updated list of floors (sorted, so states can be compared)
     def move(state, item, start, end):
         y = copy.deepcopy(state)
         for x in item:
@@ -756,7 +856,9 @@ def day11(floors=None):
 
         return y
 
-    # To find possible next moves, try moving every 1 or 2 items on the current floor to the floor directly above or below. If the result is a valid state, add it to the list
+    # To find possible next moves, try moving every 1 or 2 items on the current
+    # floor to the floor directly above or below. If the result is a valid state,
+    # add it to the list
     def nextmoves(s):
         elevator = s[0]
         floors = s[1:]
@@ -779,7 +881,8 @@ def day11(floors=None):
 
         return m
 
-    # From a list of states reachable in the current number of moves, return a list of valid next states
+    # From a list of states reachable in the current number of moves, return a
+    # list of valid next states
     def pathfind(border):
         global moves, visited
 
@@ -824,15 +927,20 @@ def day10(commands=None):
     if not commands:
         commands = input('day10.txt')
 
-    # Problem: You have instructions for a system of numbered bots that take in numbers, compare them, and deposit them into output bins. Bots don't take any action until they have two numbers to compare.
+    # Problem: You have instructions for a system of numbered bots that take in
+    # numbers, compare them, and deposit them into output bins. Bots don't take
+    # any action until they have two numbers to compare.
 
-    # Solution: start by parsing the commands and populating a dict of bots, represented as dicts with fields for two values and the destination bins for each value; also a dict for each output bin, intially all set False
+    # Solution: start by parsing the commands and populating a dict of bots,
+    # represented as dicts with fields for two values and the destination bins
+    # for each value; also a dict for each output bin, intially all set False
     def botnames():
         for c in commands:
             # 'bot 0 gives low to output 2 and high to output 0' parses out to:
             x = c.split()
 
-            # bots['bot0'] = {'low': False, 'high': False, 'lowdest': 'output2', 'highdest': 'output0'}}
+            # bots['bot0'] = {'low': False, 'high': False, 'lowdest': 'output2',
+            # 'highdest': 'output0'}}
             if x[0] == 'bot':
                 bots[(x[0] + x[1])] = {'low': False, 'high': False, 'lowdest': x[5] + x[6], 'highdest': x[10] + x[11]}
 
@@ -858,7 +966,8 @@ def day10(commands=None):
         if 'value' in bot:
             bot['value'] = x
 
-        # bots: use the low slot if it's free, otherwise put the high and low values in the correct spots
+        # bots: use the low slot if it's free, otherwise put the high and low
+        # values in the correct spots
         if 'low' in bot:
             if not bot['low']:
                 bot['low'] = x
@@ -868,7 +977,8 @@ def day10(commands=None):
                 bot['high'] = bot['low']
                 bot['low'] = x
 
-    # If a bot has both values, send them to lowdest and highdest and reset them to False
+    # If a bot has both values, send them to lowdest and highdest
+    # and reset them to False
     def botrun():
         for b in bots.values():
             if ('low' in b) and b['low'] and b['high']:
@@ -877,7 +987,8 @@ def day10(commands=None):
                 b['low'] = False
                 b['high'] = False
 
-    # 250 runs turns out to be sufficient to reach steady state. Since botvals may have changed after botrun, keep it in the loop
+    # 250 runs turns out to be sufficient to reach steady state. Since botvals
+    # may have changed after botrun, keep it in the loop
     bots = {}
     botnames()
     for i in range(250):
@@ -903,9 +1014,18 @@ def day10(commands=None):
 
 def day9(data=None):
 
-    # Part 1: You need to decompress a data file. Compression markers are contained in parentheses. (10x2) means to take the next 10 characters and insert them 2 times, then continue reading forward. Ignore whitespace and do not include the marker itself in the decompressed text to insert. However, parentheses and other special characters may appear in inserted text without denoting a compression marker. What is the length of your decompressed file?
+    # Part 1: You need to decompress a data file. Compression markers are
+    # contained in parentheses. (10x2) means to take the next 10 characters and
+    # insert them 2 times, then continue reading forward. Ignore whitespace and
+    # do not include the marker itself in the decompressed text to insert.
+    # However, parentheses and other special characters may appear in inserted
+    # text without denoting a compression marker. What is the length of your
+    # decompressed file?
 
-    # Solution: Start at the beginning of the string. Find the first '('. Partition at the first ')'after that. Extract the rlen and rx from [0], and slice out s = [2][0:rlen]. Build up decompressed by adding rx*s. Recurse? on the string after the slice.
+    # Solution: Start at the beginning of the string. Find the first '('.
+    # Partition at the first ')'after that. Extract the rlen and rx from [0],
+    # and slice out s = [2][0:rlen]. Build up decompressed by adding rx*s.
+    # Recurse? on the string after the slice.
 
     def expand_p1(s, d):
         if s.startswith('('):
@@ -924,10 +1044,12 @@ def day9(data=None):
             d += len(x[0])
             return expand_p1('(' + x[2], d)
 
-    # Part 2: Turns out you need to expand markers within inserted text after all. What is the decompressed length of your file?
+    # Part 2: Turns out you need to expand markers within inserted text after
+    # all. What is the decompressed length of your file?
 
     # Solution: Switch from recursion to iteration.
-    # TODO Can this be optimized?? Am I storing the expanded string or just its length? Can I batch process this somehow? or parallelize?
+    # TODO Can this be optimized?? Am I storing the expanded string or just its
+    # length? Can I batch process this somehow? or parallelize?
     # TODO timeit to confirm that this is RAM limited?
 
     def expand_p2(s, d):
@@ -956,12 +1078,18 @@ def day9(data=None):
 
 def day8(ops=None):
 
-    # Part 1: You are given a set of commands to execute on a screen 50 px wide by 6 px tall, which starts entirely off. How many pixels turn on?
+    # Part 1: You are given a set of commands to execute on a screen 50 px wide
+    # by 6 px tall, which starts entirely off. How many pixels turn on?
 
     # Commands:
-    # - 'rect AxB' turns on all of the pixels in a rectangle A px wide by B px tall at the top-left of the screen.
-    # - 'rotate row y=A by B' shifts all of the pixels in row A (0 is the top row) right by B px. Pixels that would fall off the right end appear at the left end of the row.
-    # - 'rotate column x=A by B' shifts all of the pixels in column A (0 is the left column) down by B px. Pixels that would fall off the bottom appear at the top of the column.
+    # - 'rect AxB' turns on all of the pixels in a rectangle A px wide by B px
+    # tall at the top-left of the screen.
+    # - 'rotate row y=A by B' shifts all of the pixels in row A (0 is the top
+    # row) right by B px. Pixels that would fall off the right end appear at
+    # the left end of the row.
+    # - 'rotate column x=A by B' shifts all of the pixels in column A (0 is the
+    # left column) down by B px. Pixels that would fall off the bottom appear
+    # at the top of the column.
 
     # numpy handles arrays well, let's use it here
     # numpy indexes arrays as (# of rows, # of cols)
@@ -990,7 +1118,8 @@ def day8(ops=None):
         if r[0] == "rotate":
             rotate(r[1], r[2], r[4])
 
-    # Part 2: The screen displays letters as capital letters 5 px wide. What code is displayed?
+    # Part 2: The screen displays letters as capital letters 5 px wide. What code
+    # is displayed?
 
     # read straight off the terminal
     for x in range(0, screen.shape[1], 5):
@@ -1017,7 +1146,8 @@ def day7_xyx(s: str) -> List[str]:
 
 def day7_matches(a: List[str], b: List[str]) -> bool:
     # Given two lists of strings, check each item of a for matching any item in b
-    # TODO this checks the reverse of x against y; maybe rename this or reverse before passing into the fn? or when generating trigrams?
+    # TODO this checks the reverse of x against y; maybe rename this or reverse
+    # before passing into the fn? or when generating trigrams?
     m = [True for x in a for y in b if x[::-1] == y]
 
     return True in m
@@ -1025,9 +1155,14 @@ def day7_matches(a: List[str], b: List[str]) -> bool:
 
 def day7(ips=None):
 
-    # Part 1: Strings are valid if they contain a 4 character palindrome (e.g. abba, smms), unless the palindrome is inside square brackets or the characters are all the same (e.g. nnnn). How many of the given strings are valid?
+    # Part 1: Strings are valid if they contain a 4 character palindrome (e.g.
+    # abba, smms), unless the palindrome is inside square brackets or the
+    # characters are all the same (e.g. nnnn). How many of the given strings are
+    # valid?
 
-    # Part 2: Strings are valid if they contain a 3 character palindrome (e.g. aba, sms) outside square brackets AND the corresponding inverse (e.g. sms -> msm) inside square brackets.
+    # Part 2: Strings are valid if they contain a 3 character palindrome (e.g.
+    # aba, sms) outside square brackets AND the corresponding inverse (e.g. sms
+    # -> msm) inside square brackets.
 
     if not ips:
         ips = input('day7.txt')
@@ -1074,7 +1209,8 @@ def day7(ips=None):
 
 def day6(messages=None):
 
-    # Problem: Given a list of strings, find the most common and the least common character in each column.
+    # Problem: Given a list of strings, find the most common and the
+    # least common character in each column.
 
     if not messages:
         messages = input('day6.txt')
@@ -1096,9 +1232,17 @@ def day6(messages=None):
 
 def day5(doorid='abbhdwsy'):
 
-    # Part 1: You are looking for an 8 character password. To find each character, determine the md5 hash of your input with an index that starts at 0 and increases each time. If the hexadecimal representation of the md5 result begins with 5 zeroes, the 6th digit is appended to the password.
+    # Part 1: You are looking for an 8 character password. To find each character,
+    # determine the md5 hash of your input with an index that starts at 0 and
+    # increases each time. If the hexadecimal representation of the md5 result
+    # begins with 5 zeroes, the 6th digit is appended to the password.
 
-    # Part 2: You are looking for an 8 character password. To find each character, determine the md5 hash of your input with an index that starts at 0 and increases each time. If the hexadecimal representation of the md5 result begins with 5 zeroes, the 7th digit is added to the password in the position given by the 6th digit. Only the first character found for each position is used, discard the rest.
+    # Part 2: You are looking for an 8 character password. To find each
+    # character, determine the md5 hash of your input with an index that starts
+    # at 0 and increases each time. If the hexadecimal representation of the md5
+    # result begins with 5 zeroes, the 7th digit is added to the password in the
+    # position given by the 6th digit. Only the first character found for each
+    # position is used, discard the rest.
 
     i: int = 0
     p1: str = ''
@@ -1121,7 +1265,11 @@ def day5(doorid='abbhdwsy'):
 
 def day4(rooms=None):
 
-    # Part 1: You are given a list of rooms formatted as a name (lowercase letters separated by dashes) followed by a dash, a sector ID, and a checksum in square brackets. A room name is valid if the checksum is the five most common letters in the encrypted name, in order, with ties broken by alphabetization. What is the sum of the sector IDs for all the valid rooms?
+    # Part 1: You are given a list of rooms formatted as a name (lowercase letters
+    # separated by dashes) followed by a dash, a sector ID, and a checksum in
+    # square brackets. A room name is valid if the checksum is the five most
+    # common letters in the encrypted name, in order, with ties broken by
+    # alphabetization. What is the sum of the sector IDs for all the valid rooms?
 
     if not rooms:
         rooms = input('day4.txt')
@@ -1132,7 +1280,8 @@ def day4(rooms=None):
     p2 = 0
 
     for x in r:
-        # Split each room into the [checksum], the sector ID, and the name, stripping out dashes
+        # Split each room into the [checksum], the sector ID, and the name,
+        # stripping out dashes
         parts = x.partition('[')
         checksum = parts[2].strip(']')
         rest = parts[0].rsplit('-', 1)
@@ -1193,16 +1342,19 @@ def day3(triangles=None):
     if not triangles:
         triangles = input('day3.txt')
 
-    # Part 1: given a list of numbers, separate them into groups of 3. How many of these groups could be the sides of a triangle (a + b > c)?
+    # Part 1: given a list of numbers, separate them into groups of 3. How many of
+    # these groups could be the sides of a triangle (a + b > c)?
 
     htri: List[List[int]] = [list(map(int, x.split())) for x in triangles]
 
-    # Part 2: Separate the numbers into groups by going down columns, not across rows, then check for triangles
+    # Part 2: Separate the numbers into groups by going down columns, not across
+    # rows, then check for triangles
 
     i = range(0, len(htri), 3)
     vtri: List[List[int]] = [list(y) for x in i for y in zip(htri[x], htri[x + 1], htri[x + 2])]
 
-    # because day3_check modifies its input, don't run it until htri and vtri are both populated
+    # because day3_check modifies its input, don't run it until htri and vtri are
+    # both populated
     p1: int = len([x for x in htri if day3_check(x)])
     p2: int = len([x for x in vtri if day3_check(x)])
 
@@ -1214,7 +1366,9 @@ def day2(keys=None):
     if not keys:
         keys = input('day2.txt')
 
-    # Part 1: Starting from key 5 of a 9-digit keypad, follow the given directions (Up, Down, Left, Right) to find each digit of a passcode. Skip any direction that leads off the edge of the keypad.
+    # Part 1: Starting from key 5 of a 9-digit keypad, follow the given
+    # directions (Up, Down, Left, Right) to find each digit of a passcode. Skip
+    # any direction that leads off the edge of the keypad.
 
     # Keypad
     # 1 2 3
@@ -1253,7 +1407,8 @@ def day2(keys=None):
 
         return keycode
 
-    # Part 2: Solve as before, on a 13-digit keypad, starting at key 5 (coordinates (-2, 0)).
+    # Part 2: Solve as before, on a 13-digit keypad, starting at key 5
+    # (coordinates (-2, 0)).
 
     # Keypad
     #        1
@@ -1276,17 +1431,21 @@ def day2(keys=None):
 
 def day1(path=None):
 
-    # Part 1: You are given a series of directions indicating a direction to turn and a number of blocks of travel on a grid. How many blocks away from the origin do you end up? Count total blocks as x + y, not as the crow flies.
+    # Part 1: You are given a series of directions indicating a direction to turn
+    # and a number of blocks of travel on a grid. How many blocks away from the
+    # origin do you end up? Count total blocks as x + y, not as the crow flies.
 
     if not path:
         path = input('day1.txt')
     path: List[str] = path[0].split(', ')
 
-    # Start at the origin facing direction North = 0 and keep a list of points visited.
+    # Start at the origin facing direction North = 0 and keep a list of points
+    # visited.
     facing: int = 0
     coordinates: List[List[int]] = [[0, 0]]
 
-    # Starting at the last known coordinate, break the direction into a turn and a distance, and update the location accordingly
+    # Starting at the last known coordinate, break the direction into a turn and
+    # a distance, and update the location accordingly
     for step in path:
         nextstep: List[int] = coordinates[-1][:]
         turn: str = step[0]

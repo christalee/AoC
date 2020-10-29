@@ -7,6 +7,15 @@ from aoc_2015_code import *
 # - check runtimes for all tests and comment out the slowest
 
 
+def test_day25():
+    assert day25([10, 10], (0, 0)) == 20151125
+    assert day25([10, 10], (1, 0)) == 31916031
+    assert day25([10, 10], (0, 1)) == 18749137
+    assert day25([10, 10], (2, 0)) == 16080970
+
+    # assert day25([6500, 6500]) == 9132360
+
+
 def test_day23():
     assert day23() == {'part1': 184, "part2": 231}
 
@@ -91,7 +100,12 @@ def test_day13():
 
 
 def test_day12():
-    assert day12() == {"part1": 156366}
+    assert day12(['[1,2,3]']) == {"part1": 6, "part2": 6}
+    assert day12(['[1,{"c":"red","b":2},3]']) == {"part1": 6, "part2": 4}
+    assert day12(['[1,"red",5]']) == {"part1": 6, "part2": 6}
+    assert day12(['[-1,{"a":1}]']) == {"part1": 0, "part2": 0}
+
+    assert day12() == {"part1": 156366, "part2": 96852}
 
 
 # def test_day11():
