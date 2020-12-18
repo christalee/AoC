@@ -15,9 +15,17 @@ const input = function (filename) {
 
 const range = function (start, stop, step = 1) {
   let rng = new Array();
-  for (let i = start; i < stop; i += step) {
-    rng.push(i);
+  if (step > 0) {
+    for (let i = start; i < stop; i += step) {
+      rng.push(i);
+    }
   }
+  if (step < 0) {
+    for (let i = start; i > stop; i += step) {
+      rng.push(i);
+    }
+  }
+
   return rng;
 }
 
@@ -29,7 +37,348 @@ const sum = function (arr) {
   return s;
 }
 
+const zip = function (m, n) {
+  let zipped = new Array();
+  for (let x in m) {
+    zipped.push([m[x], n[x]]);
+  }
+  return zipped;
+}
+
+const compare = function (m, n) {
+  let same = true;
+  for (const x in m) {
+    let a = m[x];
+    let b = n[x];
+    if (a != b) {
+      same = false;
+    }
+  }
+  return same;
+}
+
+const dedupe = function (arr) {
+  let deduped = arr.slice();
+  for (const a in arr) {
+    for (const b in arr) {
+      if (a != b) {
+        s = compare(arr[a], arr[b]);
+        if (s && b > a) {
+          const i = deduped.indexOf(arr[a]);
+          deduped.splice(i, 1);
+        }
+      }
+    }
+  }
+  return deduped;
+}
+
+const count = function (char, arr) {
+  let c = 0;
+  for (const elem of arr) {
+    if (elem == char) {
+      c += 1;
+    }
+  }
+  return c;
+}
+
 // Puzzle solutions
+
+const day14_part2 = function (ops) {
+  if (ops === undefined) {
+    ops = input("day14.txt");
+  }
+
+  const convert = function (num) {
+    const s = new Array(...Number(num).toString(2));
+    const f = new Array(36 - s.length).fill("0");
+    const g = f.concat(s);
+    let r = new Array();
+    for (i in mask) {
+      if (mask[i] == "1" || mask[i] == "X") {
+        r.push(mask[i]);
+      } else {
+        r.push(g[i]);
+      }
+    }
+
+    return r;
+  }
+
+  const floating = function (arr) {
+    const s = arr.join("");
+    let addresses = new Array(s);
+    while (addresses[0].includes("X")) {
+      new_addrs = new Array();
+      for (const x of addresses) {
+        new_addrs.push(x.replace("X", "0"));
+        new_addrs.push(x.replace("X", "1"));
+      }
+      addresses = new_addrs.slice();
+    }
+    return addresses;
+  }
+
+  let memory = new Map();
+  let mask;
+  for (const op of ops) {
+    let [addr, val] = op.split(" = ");
+    if (addr.startsWith("mask")) {
+      mask = new Array(...val);
+    }
+    if (addr.startsWith("mem")) {
+      addr = Number(addr.slice(4, -1));
+      for (a of floating(convert(addr))) {
+        memory.set(Number(parseInt(a, 2)), Number(val));
+      }
+
+    }
+
+  }
+
+  return sum(memory.values());
+}
+
+const day14_part1 = function (ops) {
+  if (ops === undefined) {
+    ops = input("day14.txt");
+  }
+
+  const convert = function (num) {
+    const s = new Array(...Number(num).toString(2));
+    const f = new Array(36 - s.length).fill("0");
+    const g = f.concat(s);
+    let r = new Array();
+    for (i in mask) {
+      if (mask[i] == "1" || mask[i] == "0") {
+        r.push(mask[i]);
+      } else {
+        r.push(g[i]);
+      }
+    }
+
+    return parseInt(r.join(""), 2);
+  }
+
+  let memory = new Array();
+  let mask;
+  for (const op of ops) {
+    let [addr, val] = op.split(" = ");
+    if (addr.startsWith("mask")) {
+      mask = new Array(...val);
+    }
+    if (addr.startsWith("mem")) {
+      val = convert(Number(val));
+      addr = Number(addr.slice(4, -1));
+      memory[addr] = val;
+    }
+
+  }
+
+  let c = 0;
+  for (const elem of memory) {
+    if (elem) {
+      c += elem;
+    }
+  }
+
+  return c;
+}
+
+const day13_part2 = function (buses) {
+  if (buses === undefined) {
+    buses =
+      "13,x,x,41,x,x,x,x,x,x,x,x,x,997,x,x,x,x,x,x,x,23,x,x,x,x,x,x,x,x,x,x,19,x,x,x,x,x,x,x,x,x,29,x,619,x,x,x,x,x,37,x,x,x,x,x,x,x,x,x,x,17"
+      .split(",");
+  }
+
+  let delays = new Map();
+  for (const b of buses) {
+    if (Number(b)) {
+      delays.set(Number(b), Number(buses.indexOf(b)));
+    }
+  }
+
+  const valid = function (time) {
+    let v = true;
+    for (const e of delays.keys()) {
+      if ((time + delays.get(e)) % e != 0) {
+        v = false;
+      }
+    }
+    return v;
+  }
+
+  let t = 1000000000000;
+  while (t < 2000000000000) {
+    if (t % 1000000000 == 0) {
+      console.log(t);
+    }
+    if (valid(t * 13)) {
+      console.log(t * 13);
+      break;
+    }
+    t += 1;
+  }
+
+  return t * 13;
+}
+
+const day13_part1 = function (departure, buses) {
+  if (buses === undefined) {
+    departure = 1000390;
+    buses =
+      "13,x,x,41,x,x,x,x,x,x,x,x,x,997,x,x,x,x,x,x,x,23,x,x,x,x,x,x,x,x,x,x,19,x,x,x,x,x,x,x,x,x,29,x,619,x,x,x,x,x,37,x,x,x,x,x,x,x,x,x,x,17"
+      .split(",");
+  }
+
+  let times = new Map();
+  for (const b of buses) {
+    if (Number(b)) {
+      const n = Number(b)
+      times.set(n * Math.ceil(departure / n) - departure, n);
+    }
+  }
+
+  const i = Math.min(...times.keys());
+  return i * times.get(i);
+
+}
+
+const day12_part2 = function (directions) {
+  if (directions === undefined) {
+    directions = input("day12.txt");
+  }
+
+  const move = function (pos, direction, distance) {
+    if (direction == "N") {
+      pos[1] += distance;
+    }
+    if (direction == "E") {
+      pos[0] += distance;
+    }
+    if (direction == "S") {
+      pos[1] -= distance;
+    }
+    if (direction == "W") {
+      pos[0] -= distance;
+    }
+    return pos;
+  }
+
+  const rotate = function (direction, degrees) {
+    let gap = [wp[0] - ship[0], wp[1] - ship[1]];
+    while (degrees > 0) {
+      if (direction == "R") {
+        gap = [gap[1], -1 * gap[0]];
+      }
+      if (direction == "L") {
+        gap = [-1 * gap[1], gap[0]];
+      }
+
+      wp = [ship[0] + gap[0], ship[1] + gap[1]];
+      degrees -= 90;
+    }
+  }
+
+  let dir = "E";
+  let ship = [0, 0];
+  let wp = [10, 1];
+
+  for (const d of directions) {
+    const c = d[0];
+    let n = Number(d.slice(1));
+
+    if (c == "F") {
+      while (n > 0) {
+        const gap = [wp[0] - ship[0], wp[1] - ship[1]];
+        ship = wp.slice();
+        wp = [ship[0] + gap[0], ship[1] + gap[1]];
+        n -= 1;
+      }
+
+    }
+
+    if (["N", "E", "W", "S"].includes(c)) {
+      wp = move(wp, c, n);
+    }
+
+    if (c == "R" || c == "L") {
+      rotate(c, n);
+    }
+  }
+
+  return Math.abs(ship[0]) + Math.abs(ship[1]);
+}
+
+const day12_part1 = function (directions) {
+  if (directions === undefined) {
+    directions = input("day12.txt");
+  }
+
+  const move = function (pos, direction, distance) {
+    if (direction == "N") {
+      pos[1] += distance;
+    }
+    if (direction == "E") {
+      pos[0] += distance;
+    }
+    if (direction == "S") {
+      pos[1] -= distance;
+    }
+    if (direction == "W") {
+      pos[0] -= distance;
+    }
+    return pos;
+  }
+
+  const dgs = new Map();
+  dgs.set("N", 0);
+  dgs.set("E", 90);
+  dgs.set("S", 180);
+  dgs.set("W", 270);
+
+  const turn = function (direction, degrees) {
+    const current = dgs.get(dir);
+    let next;
+    if (direction == "R") {
+      next = (current + degrees) % 360;
+    }
+    if (direction == "L") {
+      next = (current - degrees + 360) % 360;
+    }
+    for (const d of dgs) {
+      if (d[1] == next) {
+        dir = d[0];
+      }
+    }
+  }
+
+  let dir = "E";
+  let ship = [0, 0];
+
+  for (const d of directions) {
+    const c = d[0];
+    const n = Number(d.slice(1));
+
+    if (c == "F") {
+      ship = move(ship, dir, n);
+
+    }
+
+    if (["N", "E", "W", "S"].includes(c)) {
+      ship = move(ship, c, n);
+    }
+
+    if (c == "R" || c == "L") {
+      turn(c, n);
+    }
+  }
+
+  return Math.abs(ship[0]) + Math.abs(ship[1]);
+
+}
 
 const day9 = function (xmas) {
   if (xmas === undefined) {
@@ -133,6 +482,53 @@ const day8 = function (ops) {
   for (p of mods) {
     loop(p);
   }
+
+  return [p1, p2];
+}
+
+const day7 = function (rules) {
+  if (rules === undefined) {
+    rules = input("day7.txt");
+  }
+
+  let bags = new Array("shiny gold");
+
+  for (const b of bags) {
+    for (const r of rules) {
+      let [outer, inner] = r.split(" contain ");
+      outer = outer.split(" ").slice(0, 2).join(" ");
+      if (inner.includes(b) && !bags.includes(outer)) {
+        bags.push(outer);
+      }
+    }
+  }
+
+  const p1 = bags.length - 1;
+
+  let parsed = new Map();
+  for (const rule of rules) {
+    let [outer, inner] = rule.split(" contain ");
+    const b = inner.split(", ");
+    let items = new Map();
+    for (const item of b) {
+      const t = item.split(" ");
+      if (!isNaN(Number(t[0]))) {
+        items.set(t.slice(1, 3).join(" "), Number(t[0]));
+      }
+    }
+    parsed.set(outer.split(" ").slice(0, 2).join(" "), items);
+  }
+
+  const bag_count = function (bag) {
+    let sum = 1;
+    let inner = parsed.get(bag);
+    for (const e of inner.entries()) {
+      sum += e[1] * bag_count(e[0]);
+    }
+    return sum;
+  }
+
+  const p2 = bag_count("shiny gold") - 1;
 
   return [p1, p2];
 }
