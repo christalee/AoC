@@ -18,6 +18,7 @@
 import collections
 import hashlib
 import itertools
+import functools
 import json
 import math
 import operator
@@ -59,6 +60,35 @@ def day25(size: List[int], target: Tuple[int, int] = None):
         code[c[0]][c[1]] = remainder(33554393, a * 252533)
 
     return code[target[0]][target[1]]
+
+def day24(divisions: int, weights: List[int] = None):
+    if not weights:
+        weights = list(map(int, input("day24.txt")))
+    target = sum(weights) // divisions
+
+    def product(i):
+        return functools.reduce(lambda x, y: x*y, i, 1)
+    
+    results = []
+    for n in weights[::-1]:
+        first = [n]
+        while sum(first) < target:
+            w = [x for x in weights if x not in first]
+            remainder = target - sum(first)
+            if remainder in w:
+                first.append(remainder)
+            else:
+                less_than = [x for x in w if x < remainder]
+                if less_than:
+                    first.append(max(less_than))
+                else:
+                    break
+        if sum(first) == target:
+            results.append(first)
+    
+    s = sorted(sorted(results, key=lambda x: len(x)), key=lambda r: product(r))
+    
+    return product(s[0])
 
 
 def day23(commands=None):
@@ -567,7 +597,7 @@ def day13_part1(relations=None):
     if not relations:
         relations = input("day13.txt")
 
-    guests = set([s.split()[0] for s in relations])
+    guests = list(set([s.split()[0] for s in relations]))
     parsed = []
     for s in relations:
         t = s.split()

@@ -15,6 +15,9 @@ def test_day25():
 
     # assert day25([6500, 6500]) == 9132360
 
+def test_day24():
+    assert day24(3) == 11846773891
+    assert day24(4) == 80393059
 
 def test_day23():
     assert day23() == {'part1': 184, "part2": 231}

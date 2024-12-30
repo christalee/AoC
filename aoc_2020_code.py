@@ -4,6 +4,7 @@
 # Advent of Code 2020
 # http://adventofcode.com/2020/
 
+import copy
 import string
 
 import numpy as np
@@ -14,6 +15,95 @@ def input(filename: str):
         data = [x.strip() for x in input]
 
     return data
+
+
+def day17_part1(start):
+    if not start:
+        start = ["##.#####",
+                 "#.##..#.",
+                 ".##...##",
+                 "###.#...",
+                 ".#######",
+                 "##....##",
+                 "###.###.",
+                 ".#.#.#.."]
+
+    conway = {}
+    a = []
+    for row in start:
+        a.append(list(row))
+
+    conway[0] = a
+
+    def neighbours(xyz):
+        results = []
+        x, y, z = xyz
+        for c in [z - 1, z, z + 1]:
+            for b in [y - 1, y, y + 1]:
+                for a in [x - 1, x, x + 1]:
+                    results.append((a, b, c))
+
+        results.remove(xyz)
+
+        return results
+
+    def retrieve(xyz):
+        x, y, z = xyz
+        if z not in conway:
+            return "."
+        if y < 0 or y > len(conway[z]) - 1:
+            return "."
+        if x < 0 or x > len(conway[z][y]) - 1:
+            return "."
+
+        return conway[z][y][x]
+
+    def augment(d):
+        diameter = len(d[0])
+        for k, v in d.items():
+            new_slice = [["." for x in range(diameter + 2)]]
+            for row in v:
+                new_slice.append(["."] + row + ["."])
+            new_slice.append(["." for x in range(diameter + 2)])
+            d[k] = new_slice
+        min_key = min(d.keys())
+        d[min_key - 1] = [["." for x in range(diameter + 2)] for y in range(diameter + 2)]
+        d[-(min_key - 1)] = [["." for x in range(diameter + 2)] for y in range(diameter + 2)]
+
+        return d
+
+    for turn in range(6):
+        #     print(conway)
+        augment(conway)
+        new_conway = copy.deepcopy(conway)
+
+        for z in new_conway:
+            for y in range(len(new_conway[z])):
+                for x in range(len(new_conway[z][y])):
+                    loc = (x, y, z)
+                    count_on = 0
+                    for n in neighbours(loc):
+                        if retrieve(n) == "#":
+                            count_on += 1
+                    if retrieve(loc) == "#":
+                        if count_on in [2, 3]:
+                            new_conway[z][y][x] = "#"
+                        else:
+                            new_conway[z][y][x] = "."
+                    else:
+                        if count_on == 3:
+                            new_conway[z][y][x] = "#"
+                        else:
+                            new_conway[z][y][x] = "."
+
+        conway = copy.deepcopy(new_conway)
+
+    count = 0
+    for z in conway.values():
+        for row in z:
+            count += row.count("#")
+
+    return count
 
 
 def day5(passes=None):
