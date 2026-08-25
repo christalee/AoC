@@ -1,5 +1,6 @@
 from aoc_2017_code import *
 
+# timeit 11s
 def test_day25():
     test = [
         "Begin in state A.",
@@ -29,6 +30,7 @@ def test_day25():
     assert day25() == 3362
 
 
+# timeit 16s
 def test_day24():
     test = [
         '0/2',
@@ -61,11 +63,13 @@ def test_day24():
 #     assume(g != 0)
 #     assert loop_10_23_a(b, d, e, f, g) == loop_10_23_b(b, d, e, f, g)
 
+# timeit 12s
 def test_day23():
     assert day23_part1() == 4225
     assert day23_compiled() == 905
 
 
+# timeit 19s
 def test_day22():
     test = [
         '..#',
@@ -83,6 +87,7 @@ def test_day21():
     assert day21() == {'part1': 179, 'part2': 2766750}
 
 
+# timeit 29s
 def test_day20():
     test1 = [
         'p=< 3,0,0>, v=< 2,0,0>, a=<-1,0,0>',
@@ -133,27 +138,28 @@ def test_day18():
     assert day18_part2() == 7366
 
 
+# timeit 74s
 def test_day17():
     # part 1
     assert day17(3, 2017, 2017) == 638
     assert day17(None, 2017, 2017) == 1971
 
     # part 2
-    # assert day17() == 17202899
+    assert day17() == 17202899
 
 
 def test_day16():
     assert day16() == {'part1': 'doeaimlbnpjchfkg', 'part2': 'agndefjhibklmocp'}
 
 
+# timeit 163s
 def test_day15():
-    pass
-    # test = {'valueA': 65, 'valueB': 8921}
-    # assert day15_part1(**test) == 588
-    # assert day15_part1() == 567
+    test = {'valueA': 65, 'valueB': 8921}
+    assert day15_part1(**test) == 588
+    assert day15_part1() == 567
 
-    # assert day15_part2(**test) == 309
-    # assert day15_part2() == 323
+    assert day15_part2(**test) == 309
+    assert day15_part2() == 323
 
 
 def test_day14():
@@ -167,6 +173,7 @@ def test_day13():
     assert day13() == {"part1": 1580, "part2": 3943252}
 
 
+# timeit 12s
 def test_day12():
     test = [
         "0 <-> 2",

@@ -349,24 +349,24 @@ def day22_part2(field: List[str] = None) -> int:
 
     for _ in range(10_000_000):
         x, y = position
-        if x == 0 or y == 0 or x == len(m) - 1 or y == len(m) - 1:
-            m = day22_augment(m)
+        if x == 0 or y == 0 or x == len(f) - 1 or y == len(f) - 1:
+            f = day22_augment(f)
             x += 1
             y += 1
             position = [x, y]
-        curr = m[y][x]
+        curr = f[y][x]
         if curr == ".":
             direction = day22_turn(direction, "L")
-            m[y][x] = "W"
+            f[y][x] = "W"
         elif curr == "W":
-            m[y][x] = "#"
+            f[y][x] = "#"
             infected += 1
         elif curr == "#":
             direction = day22_turn(direction, "R")
-            m[y][x] = "F"
+            f[y][x] = "F"
         elif curr == "F":
             direction = day22_turn(direction, "180")
-            m[y][x] = "."
+            f[y][x] = "."
         position = day22_move(position, direction)
 
     return infected
@@ -591,6 +591,7 @@ def day19_find_next(point: Tuple[int, int], direction: str, x_size: int, y_size:
 def day19(maze: List[str] = None) -> Dict[str, Union[str, int]]:
     if not maze:
         with open("input_2017/day19.txt", "r") as f:
+            maze = []
             for line in f:
                 maze.append(line.strip("\n"))
 
